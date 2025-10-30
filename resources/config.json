@@ -1,0 +1,45 @@
+{
+    "batch_pipeline_name": "JOB NAME HERE",
+    "generation_config": {
+        "temperature": 0,
+        "top_p": 0.95,
+        "top_k": 40,
+        "max_output_tokens": 1000,
+        "response_mime_type": "application/json",
+        "thinking_budget": 0,
+        "system_instruction": "You are an experienced librarian. Your task is to parse the input image of the library card and extract all data points into the provided JSON schema. Do not output any narrative text or extraneous characters. Be meticulous and conservative in your extraction; only infer when absolutely necessary. The catalog conforms to the prussian instructions for cataloging.",
+        "prompt_text_part": "Extract the bibliographic information according to the instructions.",
+        "model": "gemini-2.5-flash"
+    },
+    "matching_config": {
+        "weights": {
+            "all": 0.0,
+            "title": 1.5,
+            "location": 1.0,
+            "year": 1.0,
+            "author": 0.75
+        },
+        "options": {
+            "force_year": true,
+            "year_tolerance": null,
+            "year_tolerance_penalty": 0.25,
+            "include_source_data": true,
+            "similarity_threshold": 0.35,
+            "z_threshold": 7.0,
+            "min_single_similarity": 0.5,
+            "min_multiple_similarity": 0.43,
+            "weights_file": null,
+            "extended_output": true,
+            "add_author_to_title": false,
+            "overlap_adjustment": null,
+            "jaro_winkler_adjustment": true,
+            "json_schema_version": 2,
+            "exclude_files": [],
+            "input_exclude_files": [],
+            "add_serial_to_title": false,
+            "add_edition_to_title": false
+        },
+        "source": "libris-v1_6",
+        "dataset_path": "./path-to-dataset-directory"
+    }
+}

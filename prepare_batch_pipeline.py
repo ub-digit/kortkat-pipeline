@@ -1,0 +1,52 @@
+from pathlib import Path
+import argparse
+import json
+
+if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description="Prepare batch job directories and configurations")
+    parser.add_argument("batch_pipeline_name", type=str, help="Name of batch job, used to identify it")
+
+    args = parser.parse_args()
+
+    blueprint_config_file = Path("resources/config.json")
+    
+    batch_pipeline_directory = Path(f"jobs/{args.batch_pipeline_name}")
+    # Read blueprint config file
+    try:
+        with open(blueprint_config_file, 'r') as fp:
+            config_data = json.load(fp)
+    except Exception as e:
+        print(f"Error loading config file: {e}")
+        raise e
+
+    # Write job name 
+    config_data["batch_pipeline_name"] = args.batch_pipeline_name
+
+    # Create batch pipeline directory
+    try:
+        batch_pipeline_directory.mkdir(parents=True, exist_ok=False)
+        print(f"✅ Created batch job directory: {batch_pipeline_directory}")
+    except FileExistsError as e:
+        print("❌ Failed to create batch job directory. Batch job directory alread exists.")
+        raise e
+    except Exception as e:
+        print(f"❌ Failed to create batch job directory. {e}")
+        raise e
+
+    # Write config JSON with
+    config_file = batch_pipeline_directory / "config.json"
+
+    try:
+        with open(config_file, 'w', encoding='utf-8') as fp:
+            json.dump(config_data, fp, indent=2)
+            print(f"✅ Created config file: {config_file}")
+    except Exception as e:
+        print(f"❌ Failed to create config file: {e}")
+
+    # Create pipeline subdirectorys
+    Path(f"{batch_pipeline_directory}/batch_job_input").mkdir(parents=False, exist_ok=False)
+    Path(f"{batch_pipeline_directory}/batch_job").mkdir(parents=False, exist_ok=False)
+    Path(f"{batch_pipeline_directory}/parsed_output").mkdir(parents=False, exist_ok=False)
+    Path(f"{batch_pipeline_directory}/matched").mkdir(parents=False, exist_ok=False)
+    Path(f"{batch_pipeline_directory}/evaluated").mkdir(parents=False, exist_ok=False)
