@@ -1,6 +1,7 @@
 from pathlib import Path
 import argparse
 import json
+import shutil
 
 if __name__ == "__main__":
     
@@ -43,6 +44,22 @@ if __name__ == "__main__":
             print(f"✅ Created config file: {config_file}")
     except Exception as e:
         print(f"❌ Failed to create config file: {e}")
+
+    # Copy schema file and GT
+    files_to_copy = [
+        ("json_schema2.py", batch_pipeline_directory),
+        ("resources/gt.xlsx", batch_pipeline_directory)
+    ]
+
+    failed_copies = []
+    for source_path, dest_path in files_to_copy:
+        try:
+            shutil.copy2(source_path, dest_path)
+            print(f"✅ Successfully copied: {source_path}")
+        except Exception as e:
+            # If an error occurs, log it and continue
+            print(f"❌ FAILED to copy {source_path}: {e}")
+            failed_copies.append((source_path, str(e)))    
 
     # Create pipeline subdirectorys
     Path(f"{batch_pipeline_directory}/batch_job_input").mkdir(parents=False, exist_ok=False)
