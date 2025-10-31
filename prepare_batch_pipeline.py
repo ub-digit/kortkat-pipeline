@@ -7,10 +7,15 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Prepare batch job directories and configurations")
     parser.add_argument("batch_pipeline_name", type=str, help="Name of batch job, used to identify it")
-
+    parser.add_argument("--from_pipeline", type=Path, help="Path to pipeline to copy and use as blueprint")
+    
     args = parser.parse_args()
 
-    blueprint_config_file = Path("resources/config.json")
+    blueprint_path = f"jobs/{args.from_pipeline}" if args.from_pipeline else "resources"
+
+    print(blueprint_path)
+
+    blueprint_config_file = Path(f"{blueprint_path}/config.json")
     
     batch_pipeline_directory = Path(f"jobs/{args.batch_pipeline_name}")
     # Read blueprint config file
@@ -47,8 +52,8 @@ if __name__ == "__main__":
 
     # Copy schema file and GT
     files_to_copy = [
-        ("json_schema2.py", batch_pipeline_directory),
-        ("resources/gt.xlsx", batch_pipeline_directory)
+        (f"{blueprint_path}/json_schema2.py", batch_pipeline_directory),
+        (f"{blueprint_path}/gt.xlsx", batch_pipeline_directory)
     ]
 
     failed_copies = []
