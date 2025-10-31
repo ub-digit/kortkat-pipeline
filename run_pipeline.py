@@ -74,7 +74,7 @@ def run_pipeline(pipeline_steps):
     for i, step in enumerate(pipeline_steps):
         step_name = step["name"]
         command = step["command"]        
-        target_working_dir = step.get("working_dir")
+        target_working_dir = step.get("working_dir", os.getcwd())
 
         print(f"\n▶️  Running Step {i+1}: {step_name}")
         print(f"    Command: {" ".join(command)}")
@@ -88,13 +88,6 @@ def run_pipeline(pipeline_steps):
                         capture_output=True,
                         text=True
                     )
-            else:
-                result = subprocess.run(
-                    command,
-                    check=True,
-                    capture_output=True,
-                    text=True
-                )
             if result.stdout:
                 print("    --- Output ---")
                 print(result.stdout.strip())
