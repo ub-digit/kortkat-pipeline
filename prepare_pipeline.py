@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # Copy schema file and GT
     files_to_copy = [
-        (f"{blueprint_path}/json_schema2.py", batch_pipeline_directory),
+        (f"{blueprint_path}/structured_output_schema.py", batch_pipeline_directory),
         (f"{blueprint_path}/gt.xlsx", batch_pipeline_directory),
         (f"{blueprint_path}/yolo.json", batch_pipeline_directory)
     ]

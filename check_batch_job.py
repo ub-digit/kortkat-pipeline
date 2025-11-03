@@ -62,12 +62,14 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Check status of batch job.")
     parser.add_argument("batch_job_directory", type=Path, help="Path to the directory containing a batch info file")
-    parser.add_argument("config_file", type=Path, help="Path to config file for content generation")
+    parser.add_argument("pipeline_directory", type=Path, help="Path to the pipeline directory")
 
     args = parser.parse_args()
 
+    config_file_path = args.pipeline_directory / "config.json"
+
     try:
-        with open(args.config_file, 'r') as fp:
+        with open(config_file_path, 'r') as fp:
             config_data = json.load(fp)
     except Exception as e:
         print(f"Error loading config file: {e}")
