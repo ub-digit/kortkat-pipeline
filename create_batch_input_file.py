@@ -1,4 +1,4 @@
-from json_schema2 import StructuredOutputSchema
+from resources.json_schema2 import StructuredOutputSchema
 from pathlib import Path
 import argparse
 import json
