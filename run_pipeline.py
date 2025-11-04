@@ -74,7 +74,7 @@ def define_pipeline_steps():
             "name": "Evaluate matches",
             # python3 generate_match_report.py --match_folder [match_folder] --matches_file [matches_file] --settings_file [settings_file] --ground_truth_file [groundtruth] --output_folder [output_folder] --job_name [job_name_string]
             "command": (
-                lambda args: ["python3", "generate_match_report.py", "--match_directory", str(args["pipeline_directory"]) + "/matched", "--ground_truth_file", str(args["pipeline_directory"]) + "/gt.xlsx", "--output_directory", str(args["pipeline_directory"]) + "/evaluated"]
+                lambda args: ["python3", "generate_match_report.py", "--match_directory", str(args["pipeline_directory"]) + "/matched", "--ground_truth_file", str(args["pipeline_directory"]) + "/gt.xlsx", "--output_directory", str(args["pipeline_directory"]) + "/evaluated", "--job_name", args["pipeline_directory"].name]
             )
         }
     ]
