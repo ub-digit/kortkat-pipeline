@@ -66,15 +66,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    config_file_path = args.pipeline_directory / "config.json"
-
-    try:
-        with open(config_file_path, 'r') as fp:
-            config_data = json.load(fp)
-    except Exception as e:
-        print(f"Error loading config file: {e}")
-        raise e
-
     client = genai.Client(api_key=API_KEY)
 
     check_batch_job(args.batch_job_directory, client)

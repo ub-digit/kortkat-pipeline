@@ -74,7 +74,8 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
                     print(f"❌ Error saving parsed result for key {key}: Model generated no response")
         else:
             # Handle cases where there are no candidates
-            print(f"🚫 BLOCKED/ERROR No candidates found.")
+            if verbose:
+                print(f"🚫 BLOCKED/ERROR No candidates found.")
 
         usage_metadata = response.get("usageMetadata", {})
         candidates_token_count = usage_metadata.get("candidatesTokenCount", 0)
