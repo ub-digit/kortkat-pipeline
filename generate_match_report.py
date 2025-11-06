@@ -307,7 +307,17 @@ def evaluate_match(row):
             return "Correct"
         else:
             return "Incorrect"
-        
+
+def evaluate_card_completeness(match_results):    
+    #If result for all match objects for a card is "correct", then the card is complete, else incomplete. Return only unique card_IDs with completeness status.
+    completeness_df = match_results.groupby("card_ID").apply(lambda g: pd.Series({
+        "box": g["box"].iloc[0],
+        "card": g["card"].iloc[0],
+        "card_type": g["card_type"].iloc[0],
+        "completeness": "Complete" if (g["match_stat"] == "Single").all() else "Incomplete"        
+    })).reset_index()
+    
+    return completeness_df
         
 def draw_histogram(data, ax=None):
 
@@ -390,7 +400,7 @@ def generate_pdf_report(similarity_scores_list, ouptput_directory, job_name):
             pdf.savefig(fig)
             plt.close(fig)
 
-def generate_excel_report(evaluated_matches, match_results, evaluated_card_types, evaluated_extracted_occurences, settings_path, output_directory, job_name):
+def generate_excel_report(evaluated_matches, match_results, evaluated_card_types, evaluated_extracted_occurences, evaluated_card_completeness, settings_path, output_directory, job_name):
     match_evaluation_report_filename = output_directory / str(job_name + "_report.xlsx")
 
     with pd.ExcelWriter(match_evaluation_report_filename, engine="xlsxwriter") as writer:
@@ -508,6 +518,10 @@ def generate_excel_report(evaluated_matches, match_results, evaluated_card_types
         occurences_classification_report_df = pd.DataFrame(occurences_classification_report_dict).transpose()        
         occurences_classification_report_df.to_excel(writer, sheet_name="Occurences performance", index=True)
 
+        #Write card completeness to pivot table
+        card_completeness_pivot = evaluated_card_completeness.pivot_table(index="card_type", columns="completeness", values="card_ID", aggfunc="count", fill_value=0)
+        card_completeness_pivot.to_excel(writer, sheet_name="Card completeness", index=True)
+
         # Write settings JSON to Excel
         print(f"Writing settings from {settings_path} to Excel")
         if settings_path:
@@ -593,7 +607,8 @@ if __name__ == "__main__":
     if merged_df is not None and not merged_df.empty:        
         # evaluated_matches, match_statistics = evaluate_matches(merged_df, output_dir)
         evaluated_matches, match_results = evaluate_matches(merged_df, output_dir, args.job_name)
-        generate_excel_report(evaluated_matches, match_results, evaluated_card_types, evaluated_extracted_occurences, settings_path, output_dir, args.job_name)
+        evaluated_card_completeness = evaluate_card_completeness(match_results)
+        generate_excel_report(evaluated_matches, match_results, evaluated_card_types, evaluated_extracted_occurences, evaluated_card_completeness, settings_path, output_dir, args.job_name)
     else:
         print("No data to evaluate.")
 
