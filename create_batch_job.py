@@ -51,7 +51,7 @@ def upload_input_file(input_file_path, client, job_name):
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Create batch job from input directory.")
-    parser.add_argument("input_directory", type=Path, help="Path to the batch input directory")
+    parser.add_argument("batch_input_file", type=Path, help="Path to the batch input file")
     parser.add_argument("output_directory", type=Path, help="Path to where to put the json output")
     parser.add_argument("pipeline_directory", type=Path, help="Path to the pipeline directory")
 
@@ -75,8 +75,6 @@ if __name__ == "__main__":
 
     client = genai.Client(api_key=API_KEY)
 
-    batch_input_file_name = args.input_directory / "batch_input.jsonl"
-
-    uploaded_batch_input_file = upload_input_file(batch_input_file_name, client, job_name)
+    uploaded_batch_input_file = upload_input_file(args.batch_input_file, client, job_name)
 
     create_batch_job(uploaded_batch_input_file, args.output_directory, client, job_name, generation_config)

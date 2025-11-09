@@ -10,10 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
-def check_batch_job(batch_job_directory, client):
-    batch_info_file = batch_job_directory / "batch_job_info.json"
+def check_batch_job(batch_job_info_file, output_directory, client):
+    
     try:
-        with open(batch_info_file, 'r') as fp:
+        with open(batch_job_info_file, 'r') as fp:
             batch_job_info = json.load(fp)
     except Exception as e:
         print(f"Error loading batch job info: {e}")
@@ -44,7 +44,7 @@ def check_batch_job(batch_job_directory, client):
         file_content_bytes = client.files.download(file=result_file_name)
         file_content = file_content_bytes.decode('utf-8')
         #save file content to output directory
-        output_file_path = batch_job_directory / "batch_job_result.jsonl"
+        output_file_path = output_directory / "batch_job_result.jsonl"
         with open(output_file_path, 'w', encoding='utf-8') as fp:
             fp.write(file_content)
         print(f"Results saved to {output_file_path}")
@@ -52,22 +52,22 @@ def check_batch_job(batch_job_directory, client):
     else:
         print(f"Job did not succeed. Final state: {batch_job.state.name}")
 
-    batch_job_info_filename = batch_job_directory / "batch_job_info.json"
+    
     batch_job_info = batch_job.model_dump_json(indent=4)
-    with open(batch_job_info_filename, 'w') as fp:
+    with open(batch_job_info_file, 'w') as fp:
         fp.write(batch_job_info)
 
 
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Check status of batch job.")
-    parser.add_argument("batch_job_directory", type=Path, help="Path to the directory containing a batch info file")
-    parser.add_argument("pipeline_directory", type=Path, help="Path to the pipeline directory")
+    parser.add_argument("batch_job_info_file", type=Path, help="Path to a batch info file")
+    parser.add_argument("output_directory", type=Path, help="Path to the output directory")
 
     args = parser.parse_args()
 
     client = genai.Client(api_key=API_KEY)
 
-    check_batch_job(args.batch_job_directory, client)
+    check_batch_job(args.batch_job_info_file, args.output_directory, client)
 
     

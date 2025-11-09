@@ -68,8 +68,7 @@ if __name__ == "__main__":
             failed_copies.append((source_path, str(e)))    
 
     # Create pipeline subdirectorys
-    Path(f"{batch_pipeline_directory}/batch_job_input").mkdir(parents=False, exist_ok=False)
-    Path(f"{batch_pipeline_directory}/batch_job").mkdir(parents=False, exist_ok=False)
-    Path(f"{batch_pipeline_directory}/parsed_output").mkdir(parents=False, exist_ok=False)
-    Path(f"{batch_pipeline_directory}/matched").mkdir(parents=False, exist_ok=False)
-    Path(f"{batch_pipeline_directory}/evaluated").mkdir(parents=False, exist_ok=False)
+    Path(f"{batch_pipeline_directory}/extract").mkdir(parents=False, exist_ok=False)    
+    Path(f"{batch_pipeline_directory}/parse").mkdir(parents=False, exist_ok=False)
+    Path(f"{batch_pipeline_directory}/match").mkdir(parents=False, exist_ok=False)
+    Path(f"{batch_pipeline_directory}/evaluate").mkdir(parents=False, exist_ok=False)

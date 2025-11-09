@@ -42,5 +42,16 @@
         },
         "source": "libris-v1_6",
         "dataset_path": "./path-to-dataset-directory"
+    },
+    "comparison_generation_config": {
+        "temperature": 0,
+        "top_p": 0.95,
+        "top_k": 40,
+        "max_output_tokens": 1000,
+        "response_mime_type": "application/json",
+        "thinking_budget": 0,
+        "system_instruction": "You are an experienced librarian. You are presented with extracted bibliographic data from a library card and multiple candidate records from a library catalog. Your task is to compare the extracted data with each candidate record and determine if any of the candidates match the extracted information. Respond with the ID in the tag <controlfield tag='001'> for the correct candidate. Provide your answer in the specified JSON format. Be meticulous and conservative in your evaluation; only infer when absolutely necessary. The catalog conforms to the prussian instructions for cataloging.",
+        "prompt_text_part": "Does any of the candidate records match the extracted bibliographic data?",
+        "model": "gemini-2.5-flash"
     }
 }
