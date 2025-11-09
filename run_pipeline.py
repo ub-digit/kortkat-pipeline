@@ -27,7 +27,7 @@ def define_pipeline_steps():
             "name": "Create batch input file",
             # python3 create_batch_input_file.py [input_directory] [output_directory] [pipeline_directory] --start_index [start_image_number] --end_index [end_image_number]
             "command": (
-                lambda args: ["python3", "create_batch_input_file.py", str(args["input_directory"]), str(args["pipeline_directory"]) + "/batch_job_input", str(args["pipeline_directory"])]
+                lambda args: ["python3", "create_batch_input_file.py", str(args["input_directory"]), str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
             )
         },
         {
@@ -35,22 +35,22 @@ def define_pipeline_steps():
             "name": "Create batch job",
             # python3 create_batch_job.py [input_directory] [output_directory] [pipeline_directory]
             "command": (
-                lambda args: ["python3", "create_batch_job.py", str(args["pipeline_directory"]) + "/batch_job_input", str(args["pipeline_directory"]) + "/batch_job", str(args["pipeline_directory"])]
+                lambda args: ["python3", "create_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_input.jsonl", str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
             )
         },
         {
             "key": "check-job",
             "name": "Check batch job",
-            # python3 check_batch_job.py [batch_job_directory] [pipeline_directory]
+            # python3 check_batch_job.py [batch_job_info_file] [output_directory]
             "command": (
-                lambda args: ["python3", "check_batch_job.py", str(args["pipeline_directory"]) + "/batch_job", str(args["pipeline_directory"])]
+                lambda args: ["python3", "check_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_job_info.json", str(args["pipeline_directory"]) + "/extract"]
             )
         },
         {   "key": "parse",
             "name": "Parse batch job results",
             # python3 parse_batch_job_results.py [input_directory] [output_directory]
             "command": (
-                lambda args: ["python3", "parse_batch_job_results.py", str(args["pipeline_directory"]) + "/batch_job", str(args["pipeline_directory"]) + "/parsed_output"]
+                lambda args: ["python3", "parse_batch_job_results.py", str(args["pipeline_directory"]) + "/extract/", str(args["pipeline_directory"]) + "/parse"]
             )
         },
         {
@@ -58,14 +58,14 @@ def define_pipeline_steps():
             "name": "Enrich parsed data with YOLO data",
             # python3 parse_batch_job_results.py [input_directory] [output_directory]
             "command": (
-                lambda args: ["python3", "enrich-with-yolo-data.py", "resources/yolo.json", str(args["pipeline_directory"]) + "/parsed_output/success", str(args["pipeline_directory"]) + "/parsed_output_with_yolo"]
+                lambda args: ["python3", "enrich-with-yolo-data.py", str(args["pipeline_directory"]) + "/yolo.json", str(args["pipeline_directory"]) + "/parse/success", str(args["pipeline_directory"]) + "/parse/with_yolo"]
             )
         },
         {
             "key": "match",
             "name": "Match extracted data against dataset",
             "command": (
-                lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_6", "-i", str(args["pipeline_directory"]) + "/parsed_output_with_yolo", "-o", str(args["pipeline_directory"]) + "/matched/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
+                lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_6", "-i", str(args["pipeline_directory"]) + "/parse/with_yolo", "-o", str(args["pipeline_directory"]) + "/match/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
             ),
             "working_dir": MATCH_WORKING_DIR
         },
