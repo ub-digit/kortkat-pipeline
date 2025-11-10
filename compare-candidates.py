@@ -63,7 +63,11 @@ def build_input_file_contents(prompt_contents, output_directory, generation_conf
             f.write(json.dumps(request) + "\n")
         total_requests += 1
 
-    print(f"✅ Successfully wrote batch input file with {total_requests} requests to {output_file_path}")
+    if total_requests == 0:
+       print("❌ No requests were processed. Please check the input directory and parameters.")
+       exit(1)
+    else:
+       print(f"✅ Successfully wrote batch input file with {total_requests} requests to {output_file_path}")
 
 
 def get_libris_record(libris_id, verbose):
