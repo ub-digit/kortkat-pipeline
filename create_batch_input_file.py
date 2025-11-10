@@ -138,7 +138,14 @@ def process_directory(input_directory, output_directory, pipeline_directory, gen
         else:
             if verbose:
                 print(f"Failed to add image {image_files[i]}")
-    print(f"Added {total_images} images to batch input file: {jsonl_filename}")
+
+    # Check if any images were processed, if not, halt this subprocess
+    if total_images == 0:
+       print("No images were processed. Please check the input directory and parameters.")
+       exit(1)
+    else:
+       print(f"Added {total_images} images to batch input file: {jsonl_filename}")
+
 
 
 if __name__ == "__main__":
