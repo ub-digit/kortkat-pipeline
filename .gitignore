@@ -1,7 +1,7 @@
 .DS_Store
 Thumbs.db
 desktop.ini
-source_input/
+source-input/
 jobs/
 __pycache__/
 .env
