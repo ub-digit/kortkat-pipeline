@@ -1,5 +1,6 @@
 {
     "batch_pipeline_name": "JOB NAME HERE",
+    "batch_pipeline_note": "No job specific notes provided",
     "generation_config": {
         "temperature": 0,
         "top_p": 0.95,

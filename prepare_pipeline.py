@@ -7,13 +7,13 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Prepare batch job directories and configurations")
     parser.add_argument("batch_pipeline_name", type=str, help="Name of batch job, used to identify it")
+    parser.add_argument("--note", type=str, help="Notes about this batch job")
     parser.add_argument("--from_pipeline", type=Path, help="Path to pipeline to copy and use as blueprint")
+    
     
     args = parser.parse_args()
 
     blueprint_path = f"jobs/{args.from_pipeline}" if args.from_pipeline else "resources"
-
-    print(blueprint_path)
 
     blueprint_config_file = Path(f"{blueprint_path}/config.json")
     
@@ -29,6 +29,10 @@ if __name__ == "__main__":
     # Write job name 
     config_data["batch_pipeline_name"] = args.batch_pipeline_name
 
+    # If note provided, write it
+    if args.note:
+        config_data["batch_pipeline_note"] = args.note
+
     # Create batch pipeline directory
     try:
         batch_pipeline_directory.mkdir(parents=True, exist_ok=False)
@@ -40,7 +44,7 @@ if __name__ == "__main__":
         print(f"❌ Failed to create batch job directory. {e}")
         raise e
 
-    # Write config JSON with
+    # Write config JSON
     config_file = batch_pipeline_directory / "config.json"
 
     try:
