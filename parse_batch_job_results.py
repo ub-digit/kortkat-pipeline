@@ -29,7 +29,8 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
     (output_directory / "fail").mkdir(parents=True, exist_ok=True)    
 
     total_candidate_tokens = 0
-    total_prompt_tokens = 0    
+    total_prompt_tokens = 0
+    total_thoughts_tokens = 0
     total_tokens = 0
     total_cached_tokens = 0
 
@@ -80,16 +81,19 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
         usage_metadata = response.get("usageMetadata", {})
         candidates_token_count = usage_metadata.get("candidatesTokenCount", 0)
         prompt_token_count = usage_metadata.get("promptTokenCount", 0)
+        thoughts_token_count = usage_metadata.get("thoughtsTokenCount", 0)
         total_token_count = usage_metadata.get("totalTokenCount", 0)
         cached_token_count = usage_metadata.get("cachedContentTokenCount", 0)
 
         total_candidate_tokens += candidates_token_count
         total_prompt_tokens += prompt_token_count
+        total_thoughts_tokens += thoughts_token_count
         total_tokens += total_token_count
         total_cached_tokens += cached_token_count
     
     mean_candidate_tokens = round(total_candidate_tokens / number_of_results) if number_of_results > 0 else 0
     mean_prompt_tokens = round(total_prompt_tokens / number_of_results) if number_of_results > 0 else 0
+    mean_thoughts_tokens = round(total_thoughts_tokens / number_of_results) if number_of_results > 0 else 0
     mean_total_tokens = round(total_tokens / number_of_results) if number_of_results > 0 else 0
     mean_cached_tokens = round(total_cached_tokens / number_of_results) if number_of_results > 0 else 0
 
@@ -107,6 +111,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
 |--|--|--|
 | Input tokens | {total_prompt_tokens} | {mean_prompt_tokens} |
 | Output tokens | {total_candidate_tokens} | {mean_candidate_tokens} |
+| Thoughts tokens | {total_thoughts_tokens} | {mean_thoughts_tokens} |
 | Total tokens | {total_tokens} | {mean_total_tokens} |
 | Cached tokens | {total_cached_tokens} | {mean_cached_tokens} |
 """
@@ -126,6 +131,10 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
                 "total": total_candidate_tokens,
                 "mean": mean_candidate_tokens
             },
+            "thoughts_tokens": {
+                "total": total_thoughts_tokens,
+                "mean": mean_thoughts_tokens
+            },
             "total_tokens": {
                 "total": total_tokens,
                 "mean": mean_total_tokens
@@ -144,6 +153,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
     print("-" * 45)    
     print(f"{'Input tokens':<20} {total_prompt_tokens:<10} {mean_prompt_tokens:<15}")
     print(f"{'Output tokens':<20} {total_candidate_tokens:<10} {mean_candidate_tokens:<15}")
+    print(f"{'Thoughts tokens':<20} {total_thoughts_tokens:<10} {mean_thoughts_tokens:<15}")
     print(f"{'Total tokens':<20} {total_tokens:<10} {mean_total_tokens:<15}")
     print(f"{'Cached tokens':<20} {total_cached_tokens:<10} {mean_cached_tokens:<15}")
 
