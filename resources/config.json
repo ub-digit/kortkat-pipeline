@@ -34,7 +34,7 @@
             "add_author_to_title": false,
             "overlap_adjustment": null,
             "jaro_winkler_adjustment": true,
-            "jaro_winkler_author_adjustment": false,
+            "jaro_winkler_author_adjustment": true,
             "json_schema_version": 2,
             "exclude_files": [],
             "input_exclude_files": [],
