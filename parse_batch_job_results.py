@@ -65,16 +65,12 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
                     number_of_parse_errors += 1
                     with open(parse_error_file_path, 'w', encoding='utf-8') as fp:
                         json.dump(result_json, fp, indent=4)
-                    with open(output_json_file_path, 'w', encoding='utf-8') as fp:
-                        json.dump(None, fp, indent=4)
                     if verbose:
                         print(f"❌ Error saving parsed result for key {key}: {e}")
             else:
                 number_of_model_errors += 1
                 with open(model_error_file_path, 'w', encoding='utf-8') as fp:
                         json.dump(result, fp, indent=4)
-                with open(output_json_file_path, 'w', encoding='utf-8') as fp:
-                        json.dump(None, fp, indent=4)
                 if verbose:
                     print(f"❌ Error saving parsed result for key {key}: Model generated no response")
         else:

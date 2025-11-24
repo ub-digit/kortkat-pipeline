@@ -25,8 +25,18 @@ class Edition(BaseModel):
     format: Optional[str] = Field(description="The physical format of the volume, e.g. '4:o', '8:o', '12:o', 'Fol'")
     place_of_publication: List[str] = Field(description="Where the work was published or printed. If 'u.o.' is stated, there is no known place of publication, and should render a null value.")
     country_of_publication: List[str] = Field(description="ISO 3166 English name of the country where the place of publication is located")
-    year_of_publication: List[int] = Field(description="When the work was published or printed. If the edition states a span of years (years connected by hyphens), list all years in the span. If the edition states multiple distinct years, list all of these. If 'u.å.' is stated, there is no known year, and should render a null value.")
-    year_of_publication_string: Optional[str] = Field(description="When the work was published or printed. If 'u.å.' is stated, there is no known year, and should render a null value. Capture EXACTLY what is stated.")
+    year_of_publication: Optional[int] = Field(ge=1000, description="When the work was published or printed. If 'u.å.' is stated, there is no known year, and should render a null value.")
+    year_of_publication_exact_string: Optional[str] = Field(description="When the work was published or printed. If 'u.å.' is stated, there is no known year. Capture EXACTLY what is stated.")
+    year_of_publication_compact_string: Optional[str] = Field(
+        description=(
+            "A compact string representing the year or years of publication, following a specific grammar. The output MUST strictly adhere to these rules:"
+            "**Single Year**: Use a four-digit format 'YYYY'. Example: '1984'."
+            "**Multiple Items**: Use a comma ',' without spaces to separate distinct years or ranges. Example: '1984,1992'."
+            "**Closed Range**: For a continuous range of years, use a hyphen '-' between the start and end year. Example: '1990-1995'."
+            "**Open Range**: For an ongoing publication, use the start year followed by a hyphen. Example: '2010-'."
+            "**Combinations**: Combine these rules for complex cases. For a card listing years 1850, 1852, the period from 1901 to 1910, and an ongoing series started in 1925, the correct output is '1850,1852,1901-1910,1925-'."
+        )
+    )
     serial_titles: List[str] = Field(description="List of serial titles the edition is part of. A reference to a serial title can be indicated in several different ways: prefixed with an equal sign (“=”), enclosed in slashes (“/”) or parentheses. Sometimes there is no specific indication except for the title of the serial. Information on volume etc can also be included in the reference. The reference to the serial is written below each edition.")
 
 class RelatedWork(BaseModel):
