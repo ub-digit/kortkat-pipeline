@@ -39,7 +39,9 @@
             "exclude_files": [],
             "input_exclude_files": [],
             "add_serial_to_title": false,
-            "add_edition_to_title": false
+            "add_edition_to_title": false,
+            "parse_year_ranges": false,
+            "use_first_parsed_year": false
         },
         "source": "libris-v1_6",
         "dataset_path": "./path-to-dataset-directory"
