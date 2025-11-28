@@ -59,6 +59,7 @@ def process_image(image_path, generation_config, schema):
                 "temperature": generation_config["temperature"],
                 "topP": generation_config["top_p"],
                 "topK": generation_config["top_k"],
+                "stopSequences": generation_config["stopSequences"],
                 "maxOutputTokens": generation_config["max_output_tokens"],
                 "responseMimeType": generation_config["response_mime_type"],
                 "thinkingConfig": {
