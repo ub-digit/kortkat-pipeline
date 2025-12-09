@@ -148,7 +148,10 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
     with open(json_parse_report_file_path, "w", encoding="utf-8") as fp:
         json.dump(parse_report_json, fp, indent=2, ensure_ascii=False)
         
-    print(f"\nProcessed {number_of_results} images using:")    
+    print(f"\nProcessed images: {number_of_results}")
+    print(f"Number of parse errors: {number_of_parse_errors}")
+    print(f"Number of model errors: {number_of_model_errors}\n")
+    print("Token count:")
     print(f"{"Category":<20} {"Total":<10} {"Mean":<15}")
     print("-" * 45)    
     print(f"{'Input tokens':<20} {total_prompt_tokens:<10} {mean_prompt_tokens:<15}")
