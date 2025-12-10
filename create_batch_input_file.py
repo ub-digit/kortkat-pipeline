@@ -103,7 +103,7 @@ def process_directory(input_directory, output_directory, pipeline_directory, gen
 
 
     # Save system instruction to file for future reference
-    report_filename = output_directory / "batch_creation_report.json"
+    report_filename = output_directory / "batch_input_file_creation_report.json"
     report_object = {
         "time": f"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}",
         "generation_config": generation_config,
@@ -122,7 +122,7 @@ def process_directory(input_directory, output_directory, pipeline_directory, gen
     if end_index == -1:
         end_index = len(image_files)
 
-    jsonl_filename = output_directory / "batch_input.jsonl"
+    jsonl_filename = output_directory / "batch_input_file.jsonl"
 
     # delete existing jsonl file if exists
     if jsonl_filename.exists():

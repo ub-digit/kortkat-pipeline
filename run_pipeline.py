@@ -33,9 +33,9 @@ def define_pipeline_steps():
         {
             "key": "create-job",
             "name": "Create batch job",
-            # python3 create_batch_job.py [input_directory] [output_directory] [pipeline_directory]
+            # python3 create_batch_job.py [input_] [output_directory] [pipeline_directory]
             "command": (
-                lambda args: ["python3", "create_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_input.jsonl", str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
+                lambda args: ["python3", "create_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_input_file.jsonl", str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
             )
         },
         {
@@ -43,7 +43,7 @@ def define_pipeline_steps():
             "name": "Check batch job",
             # python3 check_batch_job.py [batch_job_info_file] [output_directory]
             "command": (
-                lambda args: ["python3", "check_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_job_info.json", str(args["pipeline_directory"]) + "/extract"]
+                lambda args: ["python3", "check_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_job_info.json", str(args["pipeline_directory"]) + "/extract/batch_input_file_info.json", str(args["pipeline_directory"]) + "/extract"]
             )
         },
         {   "key": "parse",
