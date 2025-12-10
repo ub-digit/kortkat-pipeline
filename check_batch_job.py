@@ -10,8 +10,9 @@ from dotenv import load_dotenv
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
-def check_batch_job(batch_job_info_file, output_directory, client):
+def check_batch_job(batch_job_info_file, batch_input_file_info_file, output_directory, client):
     
+    # Load batch job info
     try:
         with open(batch_job_info_file, 'r') as fp:
             batch_job_info = json.load(fp)
@@ -19,7 +20,16 @@ def check_batch_job(batch_job_info_file, output_directory, client):
         print(f"Error loading batch job info: {e}")
         raise e
     
+    # Load input file info
+    try:
+        with open(batch_input_file_info_file, 'r') as fp:
+            batch_input_file_info = json.load(fp)
+    except Exception as e:
+        print(f"Error loading batch input file info: {e}")
+        raise e
+    
     batch_job_name = batch_job_info.get("name")
+    batch_input_file_name = batch_input_file_info.get("name")
     
     print(f"Polling status for job: {batch_job_name}")
 
@@ -36,18 +46,22 @@ def check_batch_job(batch_job_info_file, output_directory, client):
         print(f"Error: {batch_job.error}")
 
     if batch_job.state.name == 'JOB_STATE_SUCCEEDED':
-        # The output is in another file.
+        # Get results
         result_file_name = batch_job.dest.file_name
         print(f"Results are in file: {result_file_name}")
 
         print("\nDownloading result file content...")
         file_content_bytes = client.files.download(file=result_file_name)
         file_content = file_content_bytes.decode('utf-8')
-        #save file content to output directory
+        
+        # Save file content to output directory
         output_file_path = output_directory / "batch_job_result.jsonl"
         with open(output_file_path, 'w', encoding='utf-8') as fp:
             fp.write(file_content)
         print(f"Results saved to {output_file_path}")
+        
+        # Delete the input file to clean up
+        client.files.delete(name=batch_input_file_name)
 
     else:
         print(f"Job did not succeed. Final state: {batch_job.state.name}")
@@ -62,12 +76,13 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Check status of batch job.")
     parser.add_argument("batch_job_info_file", type=Path, help="Path to a batch info file")
+    parser.add_argument("batch_input_file_info_file", type=Path, help="Path to a batch input file info file")
     parser.add_argument("output_directory", type=Path, help="Path to the output directory")
 
     args = parser.parse_args()
 
     client = genai.Client(api_key=API_KEY)
 
-    check_batch_job(args.batch_job_info_file, args.output_directory, client)
+    check_batch_job(args.batch_job_info_file, args.batch_input_file_info_file, args.output_directory, client)
 
     

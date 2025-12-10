@@ -20,30 +20,33 @@ def create_batch_job(batch_input_file, output_directory, client, job_name, gener
         }
     )
     if batch_job:
-        batch_job_name = batch_job.name
-
         batch_job_info = batch_job.model_dump_json(indent=4)
+        # save job info to file
+        job_info_filename = output_directory / "batch_job_info.json"
+        with open(job_info_filename, 'w') as fp:
+            fp.write(batch_job_info)
+        
+        print(f"Created batch job from file: {batch_job.name}")
 
-    # save job info to file
-    job_info_filename = output_directory / "batch_job_info.json"
-    with open(job_info_filename, 'w') as fp:
-        fp.write(batch_job_info)
-    
-    print(f"Created batch job from file: {batch_job_name}")
-
-def upload_input_file(input_file_path, client, job_name):
+def upload_input_file(input_file_path, client, job_name, output_directory):
 
     display_name = job_name + "_input_file"
 
     print(f"Uploading input file: {input_file_path}...")
     try:
-        uploaded_batch_file = client.files.upload(
+        batch_input_file = client.files.upload(
             file=input_file_path,
             # config=types.UploadFileConfig(display_name=display_name, mime_type="application/jsonl")
             config=types.UploadFileConfig(display_name=display_name, mime_type="text/plain")
         )
-        print(f"Uploaded file: {uploaded_batch_file.name}")
-        return uploaded_batch_file
+        print(f"Uploaded file: {batch_input_file.name}")
+        
+        batch_input_file_info_filename = output_directory / "batch_input_file_info.json"
+        batch_input_file_info = batch_input_file.model_dump_json(indent=4)
+        with open(batch_input_file_info_filename, 'w') as fp:
+            fp.write(batch_input_file_info)
+        
+        return batch_input_file
     except Exception as e:
         print(f"Error uploading file: {e}")
         raise e   
@@ -75,6 +78,6 @@ if __name__ == "__main__":
 
     client = genai.Client(api_key=API_KEY)
 
-    uploaded_batch_input_file = upload_input_file(args.batch_input_file, client, job_name)
+    uploaded_batch_input_file = upload_input_file(args.batch_input_file, client, job_name, args.output_directory)
 
     create_batch_job(uploaded_batch_input_file, args.output_directory, client, job_name, generation_config)
