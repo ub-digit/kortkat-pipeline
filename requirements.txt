@@ -4,3 +4,6 @@ pandas
 matplotlib
 numpy
 scikit-learn
+pydantic
+requests
+openpyxl
