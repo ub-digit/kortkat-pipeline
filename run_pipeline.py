@@ -65,7 +65,7 @@ def define_pipeline_steps():
             "key": "match",
             "name": "Match extracted data against dataset",
             "command": (
-                lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_6", "-i", str(args["pipeline_directory"]) + "/parse/with_yolo", "-o", str(args["pipeline_directory"]) + "/match/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
+                lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_7", "-i", str(args["pipeline_directory"]) + "/parse/with_yolo", "-o", str(args["pipeline_directory"]) + "/match/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
             ),
             "working_dir": MATCH_WORKING_DIR
         },
