@@ -62,13 +62,22 @@ def process_image(image_path, generation_config, schema):
                 "stopSequences": generation_config["stopSequences"],
                 "maxOutputTokens": generation_config["max_output_tokens"],
                 "responseMimeType": generation_config["response_mime_type"],
-                "thinkingConfig": {
-                    "thinkingBudget": generation_config["thinking_budget"]
-                },
+                "mediaResolution": generation_config["media_resolution"],
                 "responseJsonSchema": schema.model_json_schema()
             }
         }
     }
+
+    model_name = generation_config["model"]
+
+    if "gemini-3" in model_name:
+        request["request"]["generationConfig"]["thinkingConfig"] = {
+           "thinkingLevel": generation_config["thinking_level"]
+        }
+    else:
+        request["request"]["generationConfig"]["thinkingConfig"] = {
+           "thinkingBudget": generation_config["thinking_budget"]
+        }
 
     return request
 
@@ -176,10 +185,11 @@ if __name__ == "__main__":
         "top_k": 40,
         "max_output_tokens": 1000,
         "response_mime_type": "application/json",
-        "thinking_budget": 0,
+        "thinking_level": "MINIMAL",
         "system_instruction": "You are an experienced librarian. Your task is to parse the input image of the library card and extract all data points into the provided JSON schema. Do not output any narrative text or extraneous characters. Be meticulous and conservative in your extraction; only infer when absolutely necessary. The catalog conforms to the prussian instructions for cataloging.",
         "prompt_text_part": "Extract the bibliographic information according to the instructions.",
-        "model": "gemini-2.5-flash"
+        "model": "gemini-3-flash-preview",
+        "media_resolution": "MEDIA_RESOLUTION_MEDIUM"
     }
     
     generation_config = default_generation_config | config_data.get("generation_config", {})

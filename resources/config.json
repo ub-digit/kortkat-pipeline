@@ -2,16 +2,18 @@
     "batch_pipeline_name": "JOB NAME HERE",
     "batch_pipeline_note": "No job specific notes provided",
     "generation_config": {
-        "temperature": 0,
+        "temperature": 1,
         "top_p": 0.95,
         "top_k": 40,
         "stopSequences": ["\\n\\n\\n\\n", "\\t\\t\\t\\t", "\\r\\n\\"],
         "max_output_tokens": 1000,
         "response_mime_type": "application/json",
         "thinking_budget": 0,
+        "thinking_level": "LOW",
         "system_instruction": "You are an experienced librarian. Your task is to parse the input image of the library card and extract all data points into the provided JSON schema. Do not output any narrative text or extraneous characters. Be meticulous and conservative in your extraction; only infer when absolutely necessary. The catalog conforms to the prussian instructions for cataloging.",
         "prompt_text_part": "Extract the bibliographic information according to the instructions.",
-        "model": "gemini-2.5-flash"
+        "media_resolution": "MEDIA_RESOLUTION_MEDIUM",
+        "model": "gemini-3-flash-preview"
     },
     "matching_config": {
         "weights": {
