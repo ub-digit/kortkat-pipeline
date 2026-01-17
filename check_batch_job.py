@@ -38,8 +38,8 @@ def check_batch_job(batch_job_info_file, batch_input_file_info_file, output_dire
         batch_job = client.batches.get(name=batch_job_name)
         if batch_job.state.name in ('JOB_STATE_SUCCEEDED', 'JOB_STATE_FAILED', 'JOB_STATE_CANCELLED'):
             break
-        print(f"Job not finished. Current state: {batch_job.state.name}. Waiting 10 seconds...")
-        time.sleep(10)
+        print(f"Job not finished. Current state: {batch_job.state.name}. Waiting 30 seconds...")
+        time.sleep(30)
 
     print(f"Job finished with state: {batch_job.state.name}")
     if batch_job.state.name == 'JOB_STATE_FAILED':
