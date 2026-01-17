@@ -35,6 +35,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
     total_cached_tokens = 0
 
     number_of_results = len(batch_job_results)
+    number_of_saved_jsons = 0
     number_of_model_errors = 0
     number_of_parse_errors = 0
 
@@ -59,6 +60,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
                     result_json = json.loads(result_json)
                     with open(output_json_file_path, 'w', encoding='utf-8') as fp:
                         json.dump(result_json, fp, indent=4)
+                    number_of_saved_jsons += 1
                     if verbose:
                         print(f"✅ Saved parsed result to {output_json_file_path}")
                 except Exception as e:
@@ -75,6 +77,9 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
                     print(f"❌ Error saving parsed result for key {key}: Model generated no response")
         else:
             # Handle cases where there are no candidates
+            number_of_model_errors += 1
+            with open(model_error_file_path, 'w', encoding='utf-8') as fp:
+                json.dump(result, fp, indent=4)
             if verbose:
                 print(f"🚫 BLOCKED/ERROR No candidates found.")
 
@@ -103,6 +108,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
 | Result | Count |
 |--|--|
 | Processed images: | {number_of_results} |
+| Number of saved JSONs: | {number_of_saved_jsons} |
 | Number of parse errors: | {number_of_parse_errors} |
 | Number of model errors: | {number_of_model_errors} |
 
@@ -120,6 +126,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
 
     parse_report_json = {
         "processed_images": number_of_results,
+        "saved_jsons": number_of_saved_jsons,
         "parse_errors": number_of_parse_errors,
         "model_errors": number_of_model_errors,
         "token_count": {
@@ -149,6 +156,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
         json.dump(parse_report_json, fp, indent=2, ensure_ascii=False)
         
     print(f"\nProcessed images: {number_of_results}")
+    print(f"Number of saved JSONs: {number_of_saved_jsons}")
     print(f"Number of parse errors: {number_of_parse_errors}")
     print(f"Number of model errors: {number_of_model_errors}\n")
     print("Token count:")
