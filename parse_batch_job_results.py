@@ -35,9 +35,10 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
     total_cached_tokens = 0
 
     number_of_results = len(batch_job_results)
-    number_of_saved_jsons = 0
-    number_of_model_errors = 0
+    number_of_saved_jsons = 0    
     number_of_parse_errors = 0
+    number_of_model_errors = 0
+    number_of_api_errors = 0
 
     markdown_parse_report_file_path = output_directory / f"parse_report.md"
     json_parse_report_file_path = output_directory / f"parse_report.json"
@@ -46,7 +47,8 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
         key = result.get('key', 'unknown_key')
         output_json_file_path = output_directory / "success" / f"{key}.json"
         parse_error_file_path = output_directory / "fail" / f"{key}.parse_error"
-        model_error_file_path = output_directory / "fail" / f"{key}.model_error"        
+        model_error_file_path = output_directory / "fail" / f"{key}.model_error"
+        api_error_file_path = output_directory / "fail" / f"{key}.api_error"
         
         # Safely navigate the JSON structure, result['response']['candidates'][0]['content']['parts'][0]['text']
         response = result.get("response", {})
@@ -77,8 +79,8 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
                     print(f"❌ Error saving parsed result for key {key}: Model generated no response")
         else:
             # Handle cases where there are no candidates
-            number_of_model_errors += 1
-            with open(model_error_file_path, 'w', encoding='utf-8') as fp:
+            number_of_api_errors += 1
+            with open(api_error_file_path, 'w', encoding='utf-8') as fp:
                 json.dump(result, fp, indent=4)
             if verbose:
                 print(f"🚫 BLOCKED/ERROR No candidates found.")
@@ -111,6 +113,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
 | Number of saved JSONs: | {number_of_saved_jsons} |
 | Number of parse errors: | {number_of_parse_errors} |
 | Number of model errors: | {number_of_model_errors} |
+| Number of API errors: | {number_of_api_errors} |
 
 # Token count
 | Category | Total | Mean |
@@ -129,6 +132,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
         "saved_jsons": number_of_saved_jsons,
         "parse_errors": number_of_parse_errors,
         "model_errors": number_of_model_errors,
+        "api_errors": number_of_api_errors,
         "token_count": {
             "input_tokens": {
                 "total": total_prompt_tokens,
@@ -158,7 +162,8 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
     print(f"\nProcessed images: {number_of_results}")
     print(f"Number of saved JSONs: {number_of_saved_jsons}")
     print(f"Number of parse errors: {number_of_parse_errors}")
-    print(f"Number of model errors: {number_of_model_errors}\n")
+    print(f"Number of model errors: {number_of_model_errors}")
+    print(f"Number of API errors: {number_of_api_errors}\n")
     print("Token count:")
     print(f"{"Category":<20} {"Total":<10} {"Mean":<15}")
     print("-" * 45)    
