@@ -507,6 +507,9 @@ def generate_excel_report(evaluated_matches, match_results, evaluated_card_types
         card_types_classification_report_df = pd.DataFrame(card_types_classification_report_dict).transpose()        
         card_types_classification_report_df.to_excel(writer, sheet_name="Card types performance", index=True)
 
+        # Write occurences count report to Excel
+        evaluated_extracted_occurences.to_excel(writer, sheet_name="Occurences", index=False)
+        
         # Write occurences confusion matrix to Excel
         occurences_confusion_matrix = evaluated_extracted_occurences.pivot_table(index="gt_count", columns="match_count", values="card_ID", aggfunc="count", fill_value=0)
         occurences_confusion_matrix.to_excel(writer, sheet_name="Occurences confusion matrix", index=True)
