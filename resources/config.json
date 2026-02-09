@@ -1,6 +1,19 @@
 {
     "batch_pipeline_name": "JOB NAME HERE",
     "batch_pipeline_note": "No job specific notes provided",
+      "post_process_steps": [
+    "enrich_with_yolo",
+    "transform_persons_to_authors",
+    "transform_title_from_parts"
+  ],
+  "post_process_arguments": {
+    "enrich_with_yolo": {
+      "yolo_data_path": "yolo.json"
+    },
+    "transform_title_from_parts": {
+        "parts_to_include": ["title", "remainder_of_title"]
+    }
+  }, 
     "generation_config": {
         "temperature": 1,
         "top_p": 0.95,

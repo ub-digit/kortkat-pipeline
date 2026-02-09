@@ -54,18 +54,18 @@ def define_pipeline_steps():
             )
         },
         {
-            "key": "enrich",
-            "name": "Enrich parsed data with YOLO data",
+            "key": "post-process",
+            "name": "Post-process parsed data",
             # python3 parse_batch_job_results.py [input_directory] [output_directory]
             "command": (
-                lambda args: ["python3", "enrich-with-yolo-data.py", str(args["pipeline_directory"]) + "/yolo.json", str(args["pipeline_directory"]) + "/parse/success", str(args["pipeline_directory"]) + "/parse/with_yolo"]
+                lambda args: ["python3", "post_process.py", str(args["pipeline_directory"]), str(args["pipeline_directory"]) + "/config.json", str(args["pipeline_directory"]) + "/parse/success", str(args["pipeline_directory"]) + "/parse/processed"]
             )
         },
         {
             "key": "match",
             "name": "Match extracted data against dataset",
             "command": (
-                lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_7", "-i", str(args["pipeline_directory"]) + "/parse/with_yolo", "-o", str(args["pipeline_directory"]) + "/match/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
+                lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_7", "-i", str(args["pipeline_directory"]) + "/parse/processed", "-o", str(args["pipeline_directory"]) + "/match/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
             ),
             "working_dir": MATCH_WORKING_DIR
         },
