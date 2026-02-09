@@ -1,7 +1,7 @@
-
 from pathlib import Path
 import argparse
 import json
+import re
 
 
 def load_batch_job_results(batch_job_result_dir):
@@ -22,6 +22,19 @@ def load_batch_job_results(batch_job_result_dir):
         print(f"An error occurred: {e}")
         return []
 
+def validate_result_json(result_json):
+    
+    # Invalid if \u00XX pattern exists in the JSON string, which indicates an unparsed unicode character
+    # Characters above \u001F are valid
+    if isinstance(result_json, str) and re.search(r'\\u00[0-1][0-9a-fA-F]', result_json):
+        return False
+    
+    # Invalid if HTML entities like &#xx; exist, which indicates unparsed HTML entities
+    if isinstance(result_json, str) and re.search(r'&#\d+;', result_json):
+        return False
+    
+    return True
+    
 
 def parse_batch_job_results(batch_job_results, output_directory, verbose):
     output_directory.mkdir(parents=True, exist_ok=True)
@@ -46,9 +59,9 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
     for result in batch_job_results:
         key = result.get('key', 'unknown_key')
         output_json_file_path = output_directory / "success" / f"{key}.json"
-        parse_error_file_path = output_directory / "fail" / f"{key}.parse_error"
-        model_error_file_path = output_directory / "fail" / f"{key}.model_error"
-        api_error_file_path = output_directory / "fail" / f"{key}.api_error"
+        parse_error_file_path = output_directory / "fail" / f"{key}_parse_error.json"
+        model_error_file_path = output_directory / "fail" / f"{key}_model_error.json"
+        api_error_file_path = output_directory / "fail" / f"{key}_api_error.json"
         
         # Safely navigate the JSON structure, result['response']['candidates'][0]['content']['parts'][0]['text']
         response = result.get("response", {})
@@ -59,6 +72,8 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
             result_json = candidates[0].get('content', {}).get('parts', [{}])[0].get('text')
             if result_json:
                 try:
+                    if not validate_result_json(result_json):
+                        raise ValueError("Invalid JSON detected based on validation rules.")
                     result_json = json.loads(result_json)
                     with open(output_json_file_path, 'w', encoding='utf-8') as fp:
                         json.dump(result_json, fp, indent=4)
@@ -68,7 +83,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
                 except Exception as e:
                     number_of_parse_errors += 1
                     with open(parse_error_file_path, 'w', encoding='utf-8') as fp:
-                        json.dump(result_json, fp, indent=4)
+                        fp.write(result_json)
                     if verbose:
                         print(f"❌ Error saving parsed result for key {key}: {e}")
             else:
