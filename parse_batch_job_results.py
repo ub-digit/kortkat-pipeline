@@ -2,6 +2,7 @@ from pathlib import Path
 import argparse
 import json
 import re
+import kortkat
 
 
 def load_batch_job_results(batch_job_result_dir):
@@ -20,21 +21,7 @@ def load_batch_job_results(batch_job_result_dir):
         return []
     except Exception as e:
         print(f"An error occurred: {e}")
-        return []
-
-def validate_result_json(result_json):
-    
-    # Invalid if \u00XX pattern exists in the JSON string, which indicates an unparsed unicode character
-    # Characters above \u001F are valid
-    if isinstance(result_json, str) and re.search(r'\\u00[0-1][0-9a-fA-F]', result_json):
-        return False
-    
-    # Invalid if HTML entities like &#xx; exist, which indicates unparsed HTML entities
-    if isinstance(result_json, str) and re.search(r'&#\d+;', result_json):
-        return False
-    
-    return True
-    
+        return []    
 
 def parse_batch_job_results(batch_job_results, output_directory, verbose):
     output_directory.mkdir(parents=True, exist_ok=True)
@@ -72,7 +59,7 @@ def parse_batch_job_results(batch_job_results, output_directory, verbose):
             result_json = candidates[0].get('content', {}).get('parts', [{}])[0].get('text')
             if result_json:
                 try:
-                    if not validate_result_json(result_json):
+                    if not kortkat.validate_json(result_json):
                         raise ValueError("Invalid JSON detected based on validation rules.")
                     result_json = json.loads(result_json)
                     with open(output_json_file_path, 'w', encoding='utf-8') as fp:
