@@ -20,6 +20,20 @@ def change_dir(destination):
         os.chdir(original_dir)
 
 
+
+def log_to_file(step_key, result, pipeline_args):
+    log_dir = Path(f"{pipeline_args['pipeline_directory']}/logs")
+    log_dir.mkdir(exist_ok=True)
+    log_file = log_dir / f"{step_key}.log"
+    with open(log_file, "w") as f:
+        if result.stdout:
+            f.write("=== Standard Output ===\n")
+            f.write(result.stdout.strip() + "\n")
+        if result.stderr:
+            f.write("=== Standard Error ===\n")
+            f.write(result.stderr.strip() + "\n")
+
+
 def define_pipeline_steps():
     pipeline_steps = [
         {
@@ -111,7 +125,8 @@ def run_pipeline(pipeline_steps, pipeline_args, selected_steps):
                             capture_output=True,
                             text=True
                         )
-                if result.stdout:
+                        log_to_file(step_key=step["key"], result=result, pipeline_args=pipeline_args)
+                if result.stdout:                    
                     print("    --- Output ---")
                     print(result.stdout.strip())
                     print("    --------------")
