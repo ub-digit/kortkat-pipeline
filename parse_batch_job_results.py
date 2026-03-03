@@ -2,6 +2,7 @@ from pathlib import Path
 import argparse
 import json
 import re
+from time import time
 import kortkat
 
 
@@ -15,7 +16,7 @@ def load_batch_job_results(batch_job_result_dir):
             return [json.loads(line) for line in f]
     except FileNotFoundError:
         print(f"Error: The file '{batch_job_results_file_path}' was not found.")
-        return []
+        return None
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON on a line: {e}")
         return []
@@ -185,6 +186,11 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    batch_job_results = load_batch_job_results(args.input_directory)
+    batch_job_results = None
+
+    while batch_job_results is None:
+         batch_job_results = load_batch_job_results(args.input_directory)
+         if batch_job_results is None:
+             time.sleep(60)
 
     parse_batch_job_results(batch_job_results , args.output_directory, args.verbose)
