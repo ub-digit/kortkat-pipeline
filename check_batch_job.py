@@ -38,8 +38,8 @@ def check_batch_job(batch_job_info_file, batch_input_file_info_file, output_dire
         batch_job = client.batches.get(name=batch_job_name)
         if batch_job.state.name in ('JOB_STATE_SUCCEEDED', 'JOB_STATE_FAILED', 'JOB_STATE_CANCELLED'):
             break
-        print(f"Job not finished. Current state: {batch_job.state.name}. Waiting 30 seconds...")
-        time.sleep(30)
+        print(f"Job not finished. Current state: {batch_job.state.name}. Waiting 10 minutes...")
+        time.sleep(600)  # Wait for 10 minutes before polling again
 
     print(f"Job finished with state: {batch_job.state.name}")
     if batch_job.state.name == 'JOB_STATE_FAILED':
@@ -55,10 +55,14 @@ def check_batch_job(batch_job_info_file, batch_input_file_info_file, output_dire
         file_content = file_content_bytes.decode('utf-8')
         
         # Save file content to output directory
-        output_file_path = output_directory / "batch_job_result.jsonl"
+        output_file_path = output_directory / "tmp_batch_job_result.jsonl"
         with open(output_file_path, 'w', encoding='utf-8') as fp:
             fp.write(file_content)
         print(f"Results saved to {output_file_path}")
+
+        # Rename temp result file to final name
+        final_output_file_path = output_directory / "batch_job_result.jsonl"
+        output_file_path.rename(final_output_file_path)
         
         # Delete the input file to clean up
         client.files.delete(name=batch_input_file_name)

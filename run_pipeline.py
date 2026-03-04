@@ -35,7 +35,7 @@ def log_to_file(step_key, result, pipeline_args):
 
 
 def define_pipeline_steps():
-    pipeline_steps = [
+    standard_pipeline_steps = [
         {
             "key":  "create-input",
             "name": "Create batch input file",
@@ -82,7 +82,10 @@ def define_pipeline_steps():
                 lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_7", "-i", str(args["pipeline_directory"]) + "/parse/processed", "-o", str(args["pipeline_directory"]) + "/match/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
             ),
             "working_dir": MATCH_WORKING_DIR
-        },
+        }
+    ]
+
+    extra_pipeline_steps = [
         {
             "key": "evaluate",
             "name": "Evaluate matches",
@@ -93,7 +96,7 @@ def define_pipeline_steps():
         }
     ]
 
-    return pipeline_steps
+    return standard_pipeline_steps, extra_pipeline_steps
 
 
 def run_pipeline(pipeline_steps, pipeline_args, selected_steps):
@@ -164,14 +167,17 @@ def run_pipeline(pipeline_steps, pipeline_args, selected_steps):
 
 if __name__ == "__main__":
 
-    pipeline_steps = define_pipeline_steps()
-    step_keys = [step["key"] for step in pipeline_steps]
+    standard_pipeline_steps, extra_pipeline_steps = define_pipeline_steps()
+    pipeline_steps = standard_pipeline_steps + extra_pipeline_steps
+    standard_step_keys = [step["key"] for step in standard_pipeline_steps]
+    extra_step_keys = [step["key"] for step in extra_pipeline_steps]
 
 
     parser = argparse.ArgumentParser(description="Run batch pipeline for processing, matching and evaluating library cards")
     parser.add_argument("pipeline", type=Path, help="Name of pipeline to run")
     parser.add_argument("input_directory", type=Path, help="Path to directory with images to process")
-    parser.add_argument("--steps", nargs="+", choices=step_keys, help="Pipeline steps to run")
+    parser.add_argument("--steps", nargs="+", choices=standard_step_keys, help="Standard pipeline steps to run")
+    parser.add_argument("--extra-steps", nargs="+", choices=extra_step_keys, help="Optional extra pipeline steps to run")
 
     args = parser.parse_args()
 
@@ -180,8 +186,8 @@ if __name__ == "__main__":
         "input_directory": args.input_directory        
     }
 
-    selected_steps = args.steps or step_keys
-
-    print(selected_steps)
+    selected_steps = args.steps or standard_step_keys
+    if args.extra_steps:
+        selected_steps = list(dict.fromkeys(selected_steps + args.extra_steps))
 
     run_pipeline(pipeline_steps, pipeline_args, selected_steps)
