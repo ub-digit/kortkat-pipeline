@@ -9,6 +9,12 @@ fi
 START=$1
 END=$2
 
+VENV_PATH="./venv/bin/activate"
+
+if [ -f "$VENV_PATH" ]; then
+    source "$VENV_PATH"
+fi
+
 JOB_NAME_BASE="phase1_extraction_batch"
 IMAGE_DIRECTORY_BASE="/data/kortkat/batch-images/20-batch/batch-"
 

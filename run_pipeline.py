@@ -41,7 +41,7 @@ def define_pipeline_steps():
             "name": "Create batch input file",
             # python3 create_batch_input_file.py [input_directory] [output_directory] [pipeline_directory] --start_index [start_image_number] --end_index [end_image_number]
             "command": (
-                lambda args: ["python3", "create_batch_input_file.py", str(args["input_directory"]), str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
+                lambda args: [sys.executable, "create_batch_input_file.py", str(args["input_directory"]), str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
             )
         },
         {
@@ -49,7 +49,7 @@ def define_pipeline_steps():
             "name": "Create batch job",
             # python3 create_batch_job.py [input_] [output_directory] [pipeline_directory]
             "command": (
-                lambda args: ["python3", "create_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_input_file.jsonl", str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
+                lambda args: [sys.executable, "create_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_input_file.jsonl", str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
             )
         },
         {
@@ -57,29 +57,29 @@ def define_pipeline_steps():
             "name": "Check batch job",
             # python3 check_batch_job.py [batch_job_info_file] [output_directory]
             "command": (
-                lambda args: ["python3", "check_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_job_info.json", str(args["pipeline_directory"]) + "/extract/batch_input_file_info.json", str(args["pipeline_directory"]) + "/extract"]
+                lambda args: [sys.executable, "check_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_job_info.json", str(args["pipeline_directory"]) + "/extract/batch_input_file_info.json", str(args["pipeline_directory"]) + "/extract"]
             )
         },
         {   "key": "parse",
             "name": "Parse batch job results",
             # python3 parse_batch_job_results.py [input_directory] [output_directory]
             "command": (
-                lambda args: ["python3", "parse_batch_job_results.py", str(args["pipeline_directory"]) + "/extract/", str(args["pipeline_directory"]) + "/parse"]
+                lambda args: [sys.executable, "parse_batch_job_results.py", str(args["pipeline_directory"]) + "/extract/", str(args["pipeline_directory"]) + "/parse"]
             )
         },
         {
             "key": "post-process",
             "name": "Post-process parsed data",
-            # python3 parse_batch_job_results.py [input_directory] [output_directory]
+            # python3 post_process.py [pipeline_directory] [config_file] [input_directory] [output_directory]
             "command": (
-                lambda args: ["python3", "post_process.py", str(args["pipeline_directory"]), str(args["pipeline_directory"]) + "/config.json", str(args["pipeline_directory"]) + "/parse/success", str(args["pipeline_directory"]) + "/parse/processed"]
+                lambda args: [sys.executable, "post_process.py", str(args["pipeline_directory"]), str(args["pipeline_directory"]) + "/config.json", str(args["pipeline_directory"]) + "/parse/success", str(args["pipeline_directory"]) + "/post-process"]
             )
         },
         {
             "key": "match",
             "name": "Match extracted data against dataset",
             "command": (
-                lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_7", "-i", str(args["pipeline_directory"]) + "/parse/processed", "-o", str(args["pipeline_directory"]) + "/match/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
+                lambda args: ["cargo", "run", "--release", "--", "-c", "match-json-zip", "-s", "libris-v1_7", "-i", str(args["pipeline_directory"]) + "/post-process", "-o", str(args["pipeline_directory"]) + "/match/outputfile.xlsx", "-F", "xlsx", "-C", str(args["pipeline_directory"]) + "/config.json"]
             ),
             "working_dir": MATCH_WORKING_DIR
         }
@@ -91,7 +91,7 @@ def define_pipeline_steps():
             "name": "Evaluate matches",
             # python3 generate_match_report.py --match_folder [match_folder] --matches_file [matches_file] --settings_file [settings_file] --ground_truth_file [groundtruth] --output_folder [output_folder] --job_name [job_name_string]
             "command": (
-                lambda args: ["python3", "generate_match_report.py", "--match_directory", str(args["pipeline_directory"]) + "/match", "--ground_truth_file", str(args["pipeline_directory"]) + "/gt.xlsx", "--output_directory", str(args["pipeline_directory"]) + "/evaluate", "--job_name", args["pipeline_directory"].name]
+                lambda args: [sys.executable, "generate_match_report.py", "--match_directory", str(args["pipeline_directory"]) + "/match", "--ground_truth_file", str(args["pipeline_directory"]) + "/gt.xlsx", "--output_directory", str(args["pipeline_directory"]) + "/evaluate", "--job_name", args["pipeline_directory"].name]
             )
         }
     ]

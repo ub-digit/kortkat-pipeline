@@ -6,6 +6,12 @@ if [ $# -lt 2 ]; then
   exit 1
 fi
 
+VENV_PATH="./venv/bin/activate"
+
+if [ -f "$VENV_PATH" ]; then
+    source "$VENV_PATH"
+fi
+
 START=$1
 END=$2
 
