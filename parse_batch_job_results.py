@@ -5,7 +5,7 @@ import time
 import kortkat
 
 
-def load_batch_job_results(batch_job_result_dir):
+def load_batch_job_results(batch_job_result_dir, verbose=False):
 
     batch_job_results_file_path = batch_job_result_dir / "batch_job_result.jsonl"
 
@@ -14,13 +14,16 @@ def load_batch_job_results(batch_job_result_dir):
             # Use a list comprehension for a clean, one-line solution
             return [json.loads(line) for line in f]
     except FileNotFoundError:
-        print(f"Error: The file '{batch_job_results_file_path}' was not found.")
+        if verbose:
+            print(f"Error: The file '{batch_job_results_file_path}' was not found.")
         return None
     except json.JSONDecodeError as e:
-        print(f"Error decoding JSON on a line: {e}")
+        if verbose:
+            print(f"Error decoding JSON on a line: {e}")
         return []
     except Exception as e:
-        print(f"An error occurred: {e}")
+        if verbose:
+            print(f"An error occurred: {e}")
         return []    
 
 def parse_batch_job_results(batch_job_results, output_directory, verbose):
@@ -188,7 +191,7 @@ if __name__ == "__main__":
     batch_job_results = None
 
     while batch_job_results is None:
-         batch_job_results = load_batch_job_results(args.input_directory)
+         batch_job_results = load_batch_job_results(args.input_directory, args.verbose)
          if batch_job_results is None:
              time.sleep(60)
 
