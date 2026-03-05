@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+import sys
 import json
 import os
 from pathlib import Path
@@ -14,7 +15,7 @@ def load_config(config_file):
 def run_process_step(step_name, pipeline_directory, config_file, processing_directory):
     print(f"Running post-process step: {step_name}")
     
-    command = ["python3", f"{step_name}.py", pipeline_directory, config_file, processing_directory]
+    command = [sys.executable, f"{step_name}.py", pipeline_directory, config_file, processing_directory]
     
     subprocess.run(
         command,
