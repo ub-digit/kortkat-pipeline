@@ -1,8 +1,7 @@
 from pathlib import Path
 import argparse
 import json
-import re
-from time import time
+import time
 import kortkat
 
 
