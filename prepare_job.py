@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     blueprint_config_file = Path(f"{blueprint_path}/config.json")
     
-    batch_job_directory = (Path("./jobs") / args.job_name).resolve()
+    batch_job_directory = (Path("./jobs") / args.job_name)
 
     # Create batch pipeline directory
     try:

@@ -420,9 +420,11 @@ def collect_retry_requests():
     missing_images = 0
     success_count = 0
 
-    for batch_folder in os.listdir(JOBS_DIR):
+    jobs_dir = Path(JOBS_DIR).expanduser()
+
+    for batch_folder in jobs_dir.iterdir():
         
-        if not batch_folder.startswith(TARGET_JOB_PREFIX):
+        if not batch_folder.match(f"{TARGET_JOB_PREFIX}*"):
             continue
         
         batch_path = Path(JOBS_DIR) / batch_folder
@@ -431,7 +433,7 @@ def collect_retry_requests():
             continue
             
         # Extract the batch identifier and batch number (e.g., "batch31" from "phase1_extraction_batch31")
-        batch_match = re.search(r'(batch(\d+))', batch_folder)
+        batch_match = re.search(r'(batch(\d+))', batch_folder.name)
         if not batch_match:
             continue
         batch_id = batch_match.group(1)
@@ -442,10 +444,10 @@ def collect_retry_requests():
         if not fail_dir.exists() or not fail_dir.is_dir():
             continue
 
-        for error_file in os.listdir(fail_dir):
-            if error_file.endswith("_error.json"):
+        for error_file in fail_dir.iterdir():
+            if error_file.match("*_error.json"):
                 # Extract the request key
-                request_key = re.sub(r'_[a-zA-Z0-9]+_error\.json$', '', error_file)
+                request_key = re.sub(r'_[a-zA-Z0-9]+_error\.json$', '', error_file.name)
                 
                 # Locate the corresponding image
                 image_dir = Path(IMAGES_BASE_DIR) / f"batch-{batch_number}"
