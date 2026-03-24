@@ -420,7 +420,7 @@ def collect_retry_requests():
     missing_images = 0
     success_count = 0
 
-    jobs_dir = Path(JOBS_DIR).expanduser()
+    jobs_dir = Path(JOBS_DIR).expanduser().resolve()
 
     for batch_folder in jobs_dir.iterdir():
         
@@ -500,6 +500,8 @@ def build_request_objects(retry_requests, output_directory):
 
     tasks_dicts = [task.model_dump() for task in tasks]
 
+    print(output_directory)
+
     output_file = output_directory / OUTPUT_JSON
     with open(output_file, 'w') as fp:
         json.dump(tasks_dicts, fp, indent=4)
@@ -507,8 +509,7 @@ def build_request_objects(retry_requests, output_directory):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Process images in a directory.")
-    parser.add_argument("--output_directory", type=Path, help="Path to where to put the json output")
-    
+    parser.add_argument("--output_directory", type=Path, help="Path to where to put the json output")    
     parser.add_argument("-v", "--verbose", action="store_true", help="Print detailed processing messages")
     args = parser.parse_args()
 
