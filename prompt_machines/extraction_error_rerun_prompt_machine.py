@@ -422,7 +422,7 @@ def collect_retry_requests():
 
     jobs_dir = Path(JOBS_DIR).expanduser().resolve()
 
-    for batch_folder in jobs_dir.iterdir():
+    for batch_folder in sorted(jobs_dir.iterdir()):
         
         if not batch_folder.match(f"{TARGET_JOB_PREFIX}*"):
             continue
@@ -444,7 +444,7 @@ def collect_retry_requests():
         if not fail_dir.exists() or not fail_dir.is_dir():
             continue
 
-        for error_file in fail_dir.iterdir():
+        for error_file in sorted(fail_dir.iterdir()):
             if error_file.match("*_error.json"):
                 # Extract the request key
                 request_key = re.sub(r'_[a-zA-Z0-9]+_error\.json$', '', error_file.name)
@@ -470,7 +470,7 @@ def collect_retry_requests():
                     print(f"Warning: Image not found -> {image_path}")
                     missing_images += 1
 
-    print(f"Finished! Collected {success_count} images for retry.")
+    print(f"Collected {success_count} images for retry.")
 
     if missing_images > 0:
         print(f"Note: {missing_images} images could not be found.")
@@ -500,11 +500,11 @@ def build_request_objects(retry_requests, output_directory):
 
     tasks_dicts = [task.model_dump() for task in tasks]
 
-    print(output_directory)
-
     output_file = output_directory / OUTPUT_JSON
     with open(output_file, 'w') as fp:
         json.dump(tasks_dicts, fp, indent=4)
+
+    print(f"Created output file: {output_file}")
 
 if __name__ == "__main__":
 

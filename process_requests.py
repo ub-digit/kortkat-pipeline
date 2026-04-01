@@ -8,7 +8,8 @@ import kortkat
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
-MODEL = "gemini-3-flash-preview"
+#MODEL = "gemini-3-flash-preview"
+MODEL = "gemini-3.1-flash-lite-preview"
 
 
 def log_error(filename, msg):
@@ -39,6 +40,12 @@ def process_request(request, output_directory):
     generation_config = request["request"]["generationConfig"]
     generation_config["system_instruction"] = request["request"]["systemInstruction"]["parts"][0]["text"]
     contents = request["request"]["contents"]
+
+    tools = [
+        {"url_context": {}},
+    ]
+
+    generation_config["tools"] = tools
 
     output_directory.mkdir(parents=True, exist_ok=True)
     (output_directory / "success").mkdir(parents=True, exist_ok=True)
@@ -106,7 +113,7 @@ def load_keys(directory: Path):
     keys = []
     if directory:
         request_files = [f for f in sorted(directory.glob('*.json'))]
-        keys = ["_".join(f.stem.split("_")[:2]) for f in request_files]
+        keys = [f.stem for f in request_files]
 
     return keys
         

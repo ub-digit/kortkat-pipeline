@@ -24,14 +24,12 @@ def process_request(request_data, generation_config):
 
     
     request = {
-        # TODO: Key needs to come from somewhere, either in the request data object, or from the filename
         "key": request_data["key"],
         "request": {
             "contents": contents,
             "systemInstruction": {
                 "parts": [{"text": request_data["system_instruction"]}]
             },
-            # TODO: Decide where to handle the generation config.
             "generationConfig": {
                 "temperature": generation_config["temperature"],
                 "topP": generation_config["top_p"],
@@ -43,8 +41,9 @@ def process_request(request_data, generation_config):
                 "thinkingConfig": {
                     "thinkingLevel": generation_config["thinking_level"]
                 },
-                "responseJsonSchema": request_data["json_schema"]
-            }
+                "responseJsonSchema": request_data["json_schema"]                
+            },
+            "tools": generation_config["tools"]
         }
     }
 
@@ -99,12 +98,21 @@ def process_requests(input_file, output_directory, generation_config, verbose):
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Process images in a directory.")
+    parser.add_argument("batch_job_directory", type=Path, help="Path to the batch job directory")
     parser.add_argument("input_file", type=Path, help="Path to the input file containing request data")
     parser.add_argument("output_directory", type=Path, help="Path to where to put the json output")
-    # parser.add_argument("pipeline_directory", type=Path, help="Path to the pipeline directory")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print detailed processing messages")
 
     args = parser.parse_args()
+
+    config_file_path = args.batch_job_directory / "config.json"
+
+    try:
+        with open(config_file_path, 'r') as fp:
+            config_data = json.load(fp)
+    except Exception as e:
+        print(f"Error loading config file: {e}")
+        raise e
     
     default_generation_config = {
         "temperature": 1,
@@ -118,7 +126,7 @@ if __name__ == "__main__":
         "stopSequences": ["\n\n"]
     }
     
-    # generation_config = default_generation_config | config_data.get("generation_config", {})
-    generation_config = default_generation_config
+    generation_config = default_generation_config | config_data.get("generation_config", {})
+    
 
     process_requests(args.input_file, args.output_directory, generation_config, args.verbose)
