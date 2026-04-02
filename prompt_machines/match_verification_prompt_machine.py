@@ -109,8 +109,11 @@ def process_matches(matches, extracted_data_directory, output_directory, verbose
         card_ID = match["card_ID"]
         edition_index = match["edition_idx"]
 
-        # TODO Chech if match's match_object_ID returns a valid extracted data file, if not skip and print empty row
         extracted_data = load_and_clean_extracted_data(extracted_data_directory, card_ID, edition_index, verbose)
+        if extracted_data is None:
+            if verbose:
+                print(f"⚠️  Skipping match {match_object_ID} due to missing or invalid extracted data.")
+            continue
 
         libris_url = f"{match["id"]}?vw=full&tab3=marc"
 
@@ -137,11 +140,9 @@ def process_matches(matches, extracted_data_directory, output_directory, verbose
 
 def load_match_output(match_output_file):
 
-    # load match output json
     with open(match_output_file, 'r') as fp:
         match_output = json.load(fp)
 
-    # filter list of match objects to only include those with a match_stat of "Single" and card_type of "Monografi" or "Flerbandsverk"
     match_output = [match for match in match_output if match.get("match_stat") == "Single" and match.get("card_type") in ["Monografi", "Flerbandsverk"]]
 
     return match_output
