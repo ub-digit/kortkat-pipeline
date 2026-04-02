@@ -101,7 +101,7 @@ def process_matches(matches, extracted_data_directory, output_directory, verbose
 
     tasks = []
     output_directory.mkdir(parents=True, exist_ok=True)
-    output_json_filename = output_directory / "verification_tasks.json"
+    output_json_filename = output_directory / "job_tasks.json"
 
     for match in matches:
         
@@ -151,18 +151,18 @@ def load_match_output(match_output_file):
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Verify the matches by generating prompts for the model to assess whether the information in the extracted data from the catalog card matches the information in the record at the provided URL.")
-    parser.add_argument("source_batch_job_directory", type=Path, help="Path to the batch job directory containing the matches to verify")
-    parser.add_argument("batch_job_directory", type=Path, help="Path to the batch job to run the verification task")
+    parser.add_argument("--output_directory", type=Path, help="Path to the batch job to run the verification task")
+    parser.add_argument("--source_batch_job_directory", type=Path, help="Path to the batch job directory containing the matches to verify")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print detailed processing messages")
 
     args = parser.parse_args()
 
     source_batch_job_directory = args.source_batch_job_directory.expanduser().resolve()
-    batch_job_directory = args.batch_job_directory.expanduser().resolve()
+    output_directory = args.output_directory.expanduser().resolve()
 
     match_output_file = source_batch_job_directory / "match" / "outputfile.json"
     extracted_data_directory = source_batch_job_directory / "post-process"
 
     matches = load_match_output(match_output_file)
 
-    process_matches(matches, extracted_data_directory, batch_job_directory, args.verbose)
+    process_matches(matches, extracted_data_directory, output_directory, args.verbose)

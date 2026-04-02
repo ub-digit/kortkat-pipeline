@@ -11,14 +11,12 @@ MATCH_WORKING_DIR = os.getenv("MATCH_WORKING_DIR")
 
 @contextmanager
 def change_dir(destination):
-    """A context manager to safely and temporarily change the working directory."""
     try:
         original_dir = os.getcwd()
         os.chdir(destination)
         yield
     finally:
         os.chdir(original_dir)
-
 
 
 def log_to_file(step_key, result, pipeline_args):
@@ -39,15 +37,13 @@ def define_pipeline_steps():
         {
             "key":  "create-input",
             "name": "Create batch input file",
-            # python3 create_batch_input_file.py [input_directory] [output_directory] [pipeline_directory] --start_index [start_image_number] --end_index [end_image_number]
             "command": (
-                lambda args: [sys.executable, "create_batch_input_file.py", str(args["input_directory"]), str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
+                lambda args: [sys.executable, "create_batch_input_file_from_prompt_machine.py", str(args["pipeline_directory"]), str(args["pipeline_directory"]) + "/job_tasks.json", str(args["pipeline_directory"]) + "/extract"]
             )
         },
         {
             "key": "create-job",
             "name": "Create batch job",
-            # python3 create_batch_job.py [input_] [output_directory] [pipeline_directory]
             "command": (
                 lambda args: [sys.executable, "create_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_input_file.jsonl", str(args["pipeline_directory"]) + "/extract", str(args["pipeline_directory"])]
             )
@@ -55,14 +51,12 @@ def define_pipeline_steps():
         {
             "key": "check-job",
             "name": "Check batch job",
-            # python3 check_batch_job.py [batch_job_info_file] [output_directory]
             "command": (
                 lambda args: [sys.executable, "check_batch_job.py", str(args["pipeline_directory"]) + "/extract/batch_job_info.json", str(args["pipeline_directory"]) + "/extract/batch_input_file_info.json", str(args["pipeline_directory"]) + "/extract"]
             )
         },
         {   "key": "parse",
             "name": "Parse batch job results",
-            # python3 parse_batch_job_results.py [input_directory] [output_directory]
             "command": (
                 lambda args: [sys.executable, "parse_batch_job_results.py", str(args["pipeline_directory"]) + "/extract/", str(args["pipeline_directory"]) + "/parse"]
             )
@@ -70,7 +64,6 @@ def define_pipeline_steps():
         {
             "key": "post-process",
             "name": "Post-process parsed data",
-            # python3 post_process.py [pipeline_directory] [config_file] [input_directory] [output_directory]
             "command": (
                 lambda args: [sys.executable, "post_process.py", str(args["pipeline_directory"]), str(args["pipeline_directory"]) + "/config.json", str(args["pipeline_directory"]) + "/parse/success", str(args["pipeline_directory"]) + "/post-process"]
             )
@@ -86,14 +79,17 @@ def define_pipeline_steps():
     ]
 
     extra_pipeline_steps = [
-        {
-            "key": "evaluate",
-            "name": "Evaluate matches",
-            # python3 generate_match_report.py --match_folder [match_folder] --matches_file [matches_file] --settings_file [settings_file] --ground_truth_file [groundtruth] --output_folder [output_folder] --job_name [job_name_string]
-            "command": (
-                lambda args: [sys.executable, "generate_match_report.py", "--match_directory", str(args["pipeline_directory"]) + "/match", "--ground_truth_file", str(args["pipeline_directory"]) + "/gt.xlsx", "--output_directory", str(args["pipeline_directory"]) + "/evaluate", "--job_name", args["pipeline_directory"].name]
-            )
-        }
+
+        # Any additional steps that are not part of the standard pipeline but can be optionally included when running the pipeline can be added here. For example, an evaluation step that generates a report based on the matches and a ground truth dataset could be added here, since it might not be necessary to run this step for every batch job.
+        # Example:
+        # {
+        #     "key": "evaluate",
+        #     "name": "Evaluate matches",
+        #     # python3 generate_match_report.py --match_folder [match_folder] --matches_file [matches_file] --settings_file [settings_file] --ground_truth_file [groundtruth] --output_folder [output_folder] --job_name [job_name_string]
+        #     "command": (
+        #         lambda args: [sys.executable, "generate_match_report.py", "--match_directory", str(args["pipeline_directory"]) + "/match", "--ground_truth_file", str(args["pipeline_directory"]) + "/gt.xlsx", "--output_directory", str(args["pipeline_directory"]) + "/evaluate", "--job_name", args["pipeline_directory"].name]
+        #     )
+        # }
     ]
 
     return standard_pipeline_steps, extra_pipeline_steps
@@ -172,18 +168,15 @@ if __name__ == "__main__":
     standard_step_keys = [step["key"] for step in standard_pipeline_steps]
     extra_step_keys = [step["key"] for step in extra_pipeline_steps]
 
-
     parser = argparse.ArgumentParser(description="Run batch pipeline for processing, matching and evaluating library cards")
     parser.add_argument("pipeline", type=Path, help="Name of pipeline to run")
-    parser.add_argument("input_directory", type=Path, help="Path to directory with images to process")
     parser.add_argument("--steps", nargs="+", choices=standard_step_keys, help="Standard pipeline steps to run")
     parser.add_argument("--extra-steps", nargs="+", choices=extra_step_keys, help="Optional extra pipeline steps to run")
 
     args = parser.parse_args()
 
     pipeline_args = {
-        "pipeline_directory": Path(f"jobs/{args.pipeline}").resolve(),
-        "input_directory": args.input_directory        
+        "pipeline_directory": Path(f"jobs/{args.pipeline}").resolve()
     }
 
     selected_steps = args.steps or standard_step_keys

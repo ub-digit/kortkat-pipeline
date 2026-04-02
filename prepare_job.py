@@ -17,12 +17,9 @@ if __name__ == "__main__":
     
     args, machine_args = parser.parse_known_args()
 
-    # Create batch job directory
-
     jobs_path = BASE_DIR / "jobs"
     batch_job_path = jobs_path / args.job_name
 
-    
     try:
         batch_job_path.mkdir(parents=True, exist_ok=False)
         print(f"✅ Created batch job directory: {batch_job_path}")
@@ -64,7 +61,6 @@ if __name__ == "__main__":
 
     # Copy schema file and GT
     files_to_copy = [
-        (blueprint_path / "structured_output_schema.py", batch_job_path),
         (blueprint_path / "yolo.json", batch_job_path)
     ]
 

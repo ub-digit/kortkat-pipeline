@@ -17,7 +17,8 @@
             ]
         }
     },
-    "generation_config": {
+    "batch_config": {  
+        "generation_config": {
         "temperature": 1,
         "top_p": 0.95,
         "top_k": 40,
@@ -28,12 +29,13 @@
         ],
         "max_output_tokens": 1000,
         "response_mime_type": "application/json",
-        "thinking_budget": 0,
-        "thinking_level": "LOW",
-        "system_instruction": "You are an experienced librarian. Your task is to parse the input image of the library card and extract all data points into the provided JSON schema. Do not output any narrative text or extraneous characters. Be meticulous and conservative in your extraction; only infer when absolutely necessary. The catalog conforms to the prussian instructions for cataloging.",
-        "prompt_text_part": "Extract the bibliographic information according to the instructions.",
-        "media_resolution": "MEDIA_RESOLUTION_MEDIUM",
-        "model": "gemini-3-flash-preview"
+        "thinkingConfig": {
+            "thinkingLevel": "LOW"
+        },
+        "media_resolution": "MEDIA_RESOLUTION_MEDIUM"
+        },
+        "tools": [],
+        "model": "gemini-3.1-flash-lite-preview"
     },
     "matching_config": {
         "weights": {
@@ -68,16 +70,5 @@
         },
         "source": "libris-v1_7",
         "dataset_path": "./path-to-dataset-directory"
-    },
-    "comparison_generation_config": {
-        "temperature": 0,
-        "top_p": 0.95,
-        "top_k": 40,
-        "max_output_tokens": 1000,
-        "response_mime_type": "application/json",
-        "thinking_budget": 0,
-        "system_instruction": "You are an experienced librarian. You are presented with extracted bibliographic data from a library card and multiple candidate records from a library catalog. Your task is to compare the extracted data with each candidate record and determine if any of the candidates match the extracted information. Respond with the ID in the tag <controlfield tag='001'> for the correct candidate. Provide your answer in the specified JSON format. Be meticulous and conservative in your evaluation; only infer when absolutely necessary. The catalog conforms to the prussian instructions for cataloging.",
-        "prompt_text_part": "Does any of the candidate records match the extracted bibliographic data?",
-        "model": "gemini-2.5-flash"
     }
 }
