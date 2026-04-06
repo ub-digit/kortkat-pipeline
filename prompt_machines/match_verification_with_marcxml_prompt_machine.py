@@ -92,6 +92,7 @@ def load_marcxml_data(libris_ID, verbose):
             if verbose:
                 print(f"✅ Successfully loaded MARCXML data for ID: {libris_ID}")
 
+            """
             marcxml_bytes = io.BytesIO(marcxml.encode('utf-8'))
             records = pymarc.parse_xml_to_array(marcxml_bytes)
 
@@ -101,14 +102,17 @@ def load_marcxml_data(libris_ID, verbose):
                 return None
 
             record = records[0]
-            fields_to_remove = record.get_fields('852')
+
+            tags_to_remove = ['852']
+            fields_to_remove = record.get_fields(*tags_to_remove)
             for field in fields_to_remove:
                 record.remove_field(field)
 
             modified_xml_bytes = pymarc.record_to_xml(record)
             modified_xml_string = modified_xml_bytes.decode('utf-8')
+            """
 
-            return modified_xml_string
+            return marcxml
             
         else:
             if verbose:
@@ -168,6 +172,8 @@ def process_matches(matches, extracted_data_directory, output_directory, verbose
     output_directory.mkdir(parents=True, exist_ok=True)
     output_json_filename = output_directory / "job_tasks.json"
 
+    print(f"⏳ Processing {len(matches)} matches for verification...")
+
     for match in matches:
         
         match_object_ID = match["match_object_ID"]
@@ -205,6 +211,8 @@ def process_matches(matches, extracted_data_directory, output_directory, verbose
 
     with open(output_json_filename, 'w') as fp:
         json.dump(tasks_dicts, fp, indent=4)
+
+    print(f"✅ Successfully saved {len(tasks)} match verification tasks to {output_json_filename}.")
 
 
 def load_match_output(match_output_file):
