@@ -17,7 +17,7 @@
             ]
         }
     },
-    "batch_config": {  
+    "batch_job_config": {  
         "generation_config": {
         "temperature": 1,
         "top_p": 0.95,

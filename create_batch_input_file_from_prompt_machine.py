@@ -103,4 +103,4 @@ if __name__ == "__main__":
         print(f"Error loading config file: {e}")
         raise e    
 
-    process_requests(args.input_file, args.output_directory, config_data.get("batch_config"), args.verbose)
+    process_requests(args.input_file, args.output_directory, config_data.get("batch_job_config"), args.verbose)

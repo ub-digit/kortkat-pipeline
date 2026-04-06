@@ -75,4 +75,4 @@ if __name__ == "__main__":
 
     uploaded_batch_input_file = upload_input_file(args.batch_input_file, client, job_name, args.output_directory)
 
-    create_batch_job(uploaded_batch_input_file, args.output_directory, client, job_name, config_data["batch_config"])
+    create_batch_job(uploaded_batch_input_file, args.output_directory, client, job_name, config_data["batch_job_config"])
