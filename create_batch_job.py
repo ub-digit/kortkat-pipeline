@@ -10,10 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
-def create_batch_job(batch_input_file, output_directory, client, job_name, generation_config):
+def create_batch_job(batch_input_file, output_directory, client, job_name, batch_config):
 
     batch_job = client.batches.create(
-        model=generation_config["model"],
+        model=batch_config["model"],
         src=batch_input_file.name,
         config={
             'display_name': job_name,
@@ -68,16 +68,11 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error loading config file: {e}")
         raise e
-    
-    default_generation_config = {
-        "model": "gemini-2.5-flash"
-    }
 
     job_name = config_data["batch_pipeline_name"]
-    generation_config = default_generation_config | config_data.get("generation_config", {})
 
     client = genai.Client(api_key=API_KEY)
 
     uploaded_batch_input_file = upload_input_file(args.batch_input_file, client, job_name, args.output_directory)
 
-    create_batch_job(uploaded_batch_input_file, args.output_directory, client, job_name, generation_config)
+    create_batch_job(uploaded_batch_input_file, args.output_directory, client, job_name, config_data["batch_job_config"])

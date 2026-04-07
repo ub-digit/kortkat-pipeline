@@ -8,7 +8,8 @@ import kortkat
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
-MODEL = "gemini-3-flash-preview"
+#MODEL = "gemini-3-flash-preview"
+MODEL = "gemini-3.1-flash-lite-preview"
 
 
 def log_error(filename, msg):
@@ -35,14 +36,20 @@ def generate_content(client, generation_config, contents, model_error_filename, 
             return generate_content(client, generation_config, contents, model_error_filename, retries-1)
 
 
-def process_request(request, output_directory):    
+def process_request(request, output_directory):
+
+    token_counts = {
+        "prompt_token_count": 0,
+        "candidates_token_count": 0,
+        "thoughts_token_count": 0,
+        "cached_content_token_count": 0,
+        "total_token_count": 0
+    }
+
     generation_config = request["request"]["generationConfig"]
     generation_config["system_instruction"] = request["request"]["systemInstruction"]["parts"][0]["text"]
+    generation_config["tools"] = request["request"]["tools"]
     contents = request["request"]["contents"]
-
-    output_directory.mkdir(parents=True, exist_ok=True)
-    (output_directory / "success").mkdir(parents=True, exist_ok=True)
-    (output_directory / "fail").mkdir(parents=True, exist_ok=True)
 
     client = genai.Client(api_key=API_KEY)
 
@@ -52,41 +59,106 @@ def process_request(request, output_directory):
 
     result = generate_content(client, generation_config, contents, model_error_filename)
 
-    if result == False:
+    if not result:
         print(f"❌ Failed: {request['key']}")
-        return False
-    
+        return False, None
+        
     try:
         if not kortkat.validate_json(result.text):
             log_error(parse_error_filename, result)
             print(f"❌ Failed: {request['key']}")
-            return False
+            return False, None
+        
         json_object = json.loads(result.text)        
         with open(json_filename, 'w') as fp:
             json.dump(json_object, fp, indent=4)
 
-        print(f"✅ Success: {request['key']}")    
-        return result
-    except:
-        log_error(parse_error_filename, result)
-        print(f"❌ Failed: {request['key']}")
-        return False
+        if hasattr(result, 'usage_metadata') and result.usage_metadata:
+            token_counts["prompt_token_count"] = result.usage_metadata.prompt_token_count or 0
+            token_counts["candidates_token_count"] = result.usage_metadata.candidates_token_count or 0
+            token_counts["thoughts_token_count"] = result.usage_metadata.thoughts_token_count or 0
+            token_counts["cached_content_token_count"] = result.usage_metadata.cached_content_token_count or 0
+            token_counts["total_token_count"] = result.usage_metadata.total_token_count or 0
+
+        print(f"✅ Success: {request['key']} - {token_counts['prompt_token_count']} prompt tokens, {token_counts['candidates_token_count']} candidate tokens, {token_counts['thoughts_token_count']} thought tokens")
+        return True, token_counts
+    
+    except Exception as e:
+        print(f"❌ Failed: {request['key']} - {e}")
+        log_error(parse_error_filename, result)        
+        return False, None
 
 
 def process_requests(filtered_requests_input, output_directory):
-    for request in filtered_requests_input:
-        process_request(request, output_directory)
+    output_directory.mkdir(parents=True, exist_ok=True)
+    (output_directory / "success").mkdir(parents=True, exist_ok=True)
+    (output_directory / "fail").mkdir(parents=True, exist_ok=True)
+
+    stats = {
+        "successful_requests": 0,
+        "failed_requests": 0,
+        "total_prompt_tokens": 0,
+        "total_candidate_tokens": 0,
+        "total_thought_tokens": 0,
+        "total_cached_content_tokens": 0,
+        "total_tokens": 0
+    }
+    
+    try:
+        for request in filtered_requests_input:
+            is_success, token_counts = process_request(request, output_directory)
+            if is_success and token_counts:
+                stats["successful_requests"] += 1
+                stats["total_prompt_tokens"] += token_counts["prompt_token_count"]
+                stats["total_candidate_tokens"] += token_counts["candidates_token_count"]
+                stats["total_thought_tokens"] += token_counts["thoughts_token_count"]
+                stats["total_cached_content_tokens"] += token_counts["cached_content_token_count"]
+                stats["total_tokens"] += token_counts["total_token_count"]
+            else:
+                stats["failed_requests"] += 1
+    
+    except KeyboardInterrupt:
+        print("\n⚠️  Processing interrupted by user. Generating summary for completed requests...")
+
+    finally:
+        total_requests = stats["successful_requests"] + stats["failed_requests"]
+
+        print("\n" + "="*30)
+        print("📊 PROCESSING SUMMARY")
+        print("="*30)
+        print(f"Total Requests: {total_requests}")
+        print(f"Successful:     {stats['successful_requests']}")
+        print(f"Failed:         {stats['failed_requests']}")
+        
+        if stats["successful_requests"] > 0:
+            print("\n--- Token Usage (Successful Requests) ---")
+            print(f"Total Tokens Used:           {stats['total_tokens']}")
+            print(f"Total Prompt Tokens:         {stats['total_prompt_tokens']}")
+            print(f"Total Candidate Tokens:      {stats['total_candidate_tokens']}")
+            print(f"Total Thought Tokens:        {stats['total_thought_tokens']}")
+            print(f"Total Cached Content Tokens: {stats['total_cached_content_tokens']}")
+            
+            mean_total = stats['total_tokens'] / stats["successful_requests"]
+            mean_prompt = stats['total_prompt_tokens'] / stats["successful_requests"]
+            mean_candidate = stats['total_candidate_tokens'] / stats["successful_requests"]
+            mean_thoughts = stats['total_thought_tokens'] / stats["successful_requests"]
+            mean_cached_content = stats['total_cached_content_tokens'] / stats["successful_requests"]
+            
+            print("\n--- Average Per Successful Request ---")
+            print(f"Mean Total Tokens:     {mean_total:.0f}")
+            print(f"Mean Prompt Tokens:    {mean_prompt:.0f}")
+            print(f"Mean Candidate Tokens: {mean_candidate:.0f}")
+            print(f"Mean Thought Tokens:   {mean_thoughts:.0f}")
+            print(f"Mean Cached Content Tokens: {mean_cached_content:.0f}")
 
 
 def filter_requests_input(batch_job_input, keys_to_include, keys_to_exclude):
 
-    # IF length of keys_to_include is greater than 0, use it as the filtered_request_keys, otherwise use all keys from batch_job_input
     if len(keys_to_include) > 0:
         filtered_request_keys = keys_to_include
     else:
         filtered_request_keys = [request["key"] for request in batch_job_input]
 
-    # Filter out keys that are in keys_to_exclude
     filtered_request_keys = [key for key in filtered_request_keys if key not in keys_to_exclude]
 
     filtered_requests_input = [request for request in batch_job_input if request["key"] in filtered_request_keys]
@@ -106,7 +178,7 @@ def load_keys(directory: Path):
     keys = []
     if directory:
         request_files = [f for f in sorted(directory.glob('*.json'))]
-        keys = ["_".join(f.stem.split("_")[:2]) for f in request_files]
+        keys = [f.stem for f in request_files]
 
     return keys
         

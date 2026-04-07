@@ -11,7 +11,6 @@ def load_batch_job_results(batch_job_result_dir, verbose=False):
 
     try:
         with open(batch_job_results_file_path, 'r', encoding='utf-8') as f:
-            # Use a list comprehension for a clean, one-line solution
             return [json.loads(line) for line in f]
     except FileNotFoundError:
         if verbose:
