@@ -17,6 +17,10 @@ INDEX_NAME = "records"
 SYSTEM_INSTRUCTION = """### ROLE
 You are an expert librarian and archivist. Your task is to assess whether the information in the extracted data from the catalog card matches the information in the MARCXML record.
 
+### Overall instructions
+- Do not make assumptions about the data. Base your assessment solely on the information provided in the extracted data from the catalog card and the MARCXML record.
+- Do not make any assumptions about errors in the extraction process of the data from the catalog card, or in the MARCXML record. Assume that all the information provided is correct and accurate, even if there are discrepancies between the two sources of information.
+
 ### ASSESSMENT CATEGORIES
 #### Correct
 Overall, it should be obvious that the information extraced from the catalog card describes the same work as the information in the MARCXML record. This means that:
@@ -33,6 +37,7 @@ Overall, the information extraced from the catalog card describes the same work 
 - The publication year matches, with NO discrepancies allowed.
 - Discrepancies in publication place are allowed, but should be noted in the reasoning.
 - Discrepancies in terms of edition, part or volumes are allowed, but should be noted in the reasoning.
+- Discrepancies in bibliographic scope where the information in the extracted data from the catalog card describes a more specific or more general part of the work than the information in the MARCXML record, are allowed but should be noted in the reasoning.
 - Discrepancies in terms of format are allowed.
 
 #### Incorrect
@@ -91,8 +96,7 @@ def load_marcxml_data(libris_ID, verbose):
 
             if verbose:
                 print(f"✅ Successfully loaded MARCXML data for ID: {libris_ID}")
-
-            """
+            
             marcxml_bytes = io.BytesIO(marcxml.encode('utf-8'))
             records = pymarc.parse_xml_to_array(marcxml_bytes)
 
@@ -103,16 +107,20 @@ def load_marcxml_data(libris_ID, verbose):
 
             record = records[0]
 
-            tags_to_remove = ['852']
+            tags_to_remove = ['887']
             fields_to_remove = record.get_fields(*tags_to_remove)
             for field in fields_to_remove:
                 record.remove_field(field)
 
+            for field in list(record.fields):
+                if not field.is_control_field():
+                    if field.get_subfields('5'):
+                        record.remove_field(field)
+
             modified_xml_bytes = pymarc.record_to_xml(record)
             modified_xml_string = modified_xml_bytes.decode('utf-8')
-            """
-
-            return marcxml
+            
+            return modified_xml_string
             
         else:
             if verbose:
@@ -121,7 +129,7 @@ def load_marcxml_data(libris_ID, verbose):
         
     except Exception as e:
         if verbose:
-            print(f"Failed to retrieve MARCXML data for ID: {libris_ID}. Error: {e}")
+            print(f"❌ Failed to retrieve MARCXML data for ID: {libris_ID}. Error: {e}")
         return None
 
 
