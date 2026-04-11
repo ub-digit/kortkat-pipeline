@@ -8,7 +8,8 @@ import kortkat
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
-#MODEL = "gemini-3-flash-preview"
+# MODEL = "gemini-3.1-pro-preview"
+# MODEL = "gemini-3-flash-preview"
 MODEL = "gemini-3.1-flash-lite-preview"
 
 
@@ -178,7 +179,15 @@ def load_keys(directory: Path):
     keys = []
     if directory:
         request_files = [f for f in sorted(directory.glob('*.json'))]
-        keys = [f.stem for f in request_files]
+        # We need to remove the suffixes from the filenames to get the request keys, which are in the format [key].json or [key]_[error_type].json where error_type can be one of
+        # ["parse_error", "model_error", "api_error"]
+        for f in request_files:
+            key = f.stem
+            for suffix in ["_parse_error", "_model_error", "_api_error"]:
+                if key.endswith(suffix):
+                    key = key[:-len(suffix)]
+                    break
+            keys.append(key)
 
     return keys
         
