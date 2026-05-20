@@ -261,7 +261,7 @@ def label_matches(group):
         "box": group['box'].iloc[0],
         "card": group['card'].iloc[0],
         "card_ID": group['card_ID'].iloc[0],
-        "match_object_ID": group['match_object_ID'].iloc[0],        
+        "match_object_ID": group.name,
         "kortkat_URL": f"https://kortkat.ub.gu.se/card/{group["box"].iloc[0]}/{group["card"].iloc[0]}",        
         "gt_card_type": group['gt_card_type'].iloc[0],
         "gt_truth_type": group['gt_truth_type'].iloc[0],
@@ -414,7 +414,11 @@ def generate_excel_report(evaluated_matches, match_results, evaluated_card_types
         match_results_statistics_sheet_name = "Match results statistics"
 
         all_match_stats = match_results["match_stat"].unique()
+        # all_match_stats is a StringArray, convert to normal list
+        all_match_stats = all_match_stats.tolist()
         all_results = match_results["result"].unique()
+        # Same for all_results
+        all_results = all_results.tolist()
 
         all_match_stats.sort()
         all_results.sort()
