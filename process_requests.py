@@ -8,9 +8,6 @@ import kortkat
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
-# MODEL = "gemini-3.1-pro-preview"
-# MODEL = "gemini-3-flash-preview"
-MODEL = "gemini-3.1-flash-lite-preview"
 
 
 def log_error(filename, msg):
@@ -19,10 +16,10 @@ def log_error(filename, msg):
         fp.write(str(msg))
 
 
-def generate_content(client, generation_config, contents, model_error_filename, retries=10):
+def generate_content(client, model, generation_config, contents, model_error_filename, retries=10):
     try:
         result = client.models.generate_content(
-            model = MODEL,
+            model = model,
             contents=contents,
             config=generation_config
         )
@@ -37,7 +34,7 @@ def generate_content(client, generation_config, contents, model_error_filename, 
             return generate_content(client, generation_config, contents, model_error_filename, retries-1)
 
 
-def process_request(request, output_directory):
+def process_request(request, output_directory, model):
 
     token_counts = {
         "prompt_token_count": 0,
@@ -58,8 +55,8 @@ def process_request(request, output_directory):
     parse_error_filename = output_directory / "fail" / f"{request['key']}_parse_error.json"
     model_error_filename = output_directory / "fail" / f"{request['key']}_model_error.json"
 
-    result = generate_content(client, generation_config, contents, model_error_filename)
-
+    result = generate_content(client, model, generation_config, contents, model_error_filename)
+    
     if not result:
         print(f"❌ Failed: {request['key']}")
         return False, None
@@ -90,7 +87,7 @@ def process_request(request, output_directory):
         return False, None
 
 
-def process_requests(filtered_requests_input, output_directory):
+def process_requests(filtered_requests_input, output_directory, model):
     output_directory.mkdir(parents=True, exist_ok=True)
     (output_directory / "success").mkdir(parents=True, exist_ok=True)
     (output_directory / "fail").mkdir(parents=True, exist_ok=True)
@@ -107,7 +104,7 @@ def process_requests(filtered_requests_input, output_directory):
     
     try:
         for request in filtered_requests_input:
-            is_success, token_counts = process_request(request, output_directory)
+            is_success, token_counts = process_request(request, output_directory, model)
             if is_success and token_counts:
                 stats["successful_requests"] += 1
                 stats["total_prompt_tokens"] += token_counts["prompt_token_count"]
@@ -196,6 +193,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process request synchronously based on batch job input file and save results to output directory. Optionally filter which requests to process based on include and exclude directories with json files beginning with [box_card] as the request key.')
     parser.add_argument('input_directory', type=Path, help='Path to the directory with the batch input file')
     parser.add_argument('output_directory', type=Path, help='Path to where to put the json output')
+    parser.add_argument('model', type=str, help='Model to use for processing requests')
     parser.add_argument('-i', '--include_directory', type=Path, help='Path to directory with files to include in processing', default=None)
     parser.add_argument('-e', '--exclude_directory', type=Path, help='Path to directory with files to exclude from processing', default=None)
 
@@ -210,4 +208,4 @@ if __name__ == "__main__":
         print("⚠️  No requests to process after filtering. Exiting.")
         exit(0)
 
-    process_requests(filtered_requests_input, args.output_directory)
+    process_requests(filtered_requests_input, args.output_directory, args.model)
