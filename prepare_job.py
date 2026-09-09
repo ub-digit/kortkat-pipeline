@@ -9,11 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent
 
 if __name__ == "__main__":
     
-    parser = argparse.ArgumentParser(description="Prepare batch job directories and configurations")
-    parser.add_argument("--job_name", type=str, help="Name of batch job, used to identify it")
-    parser.add_argument("--note", type=str, help="Notes about this batch job")
-    parser.add_argument("--from_pipeline", type=Path, help="Path to pipeline to copy and use as blueprint")
-    parser.add_argument("--prompt_machine", type=str, help="Name of prompt machine to use for this batch job, used to identify it")
+    parser = argparse.ArgumentParser(description="Prepare job directories and configurations")
+    parser.add_argument("--job_name", type=str, help="Name of job, used to identify it")
+    parser.add_argument("--note", type=str, help="Notes about this job")
+    parser.add_argument("--from_job", type=Path, help="Name of job to copy and use as blueprint")
+    parser.add_argument("--prompt_machine", type=str, help="Name of prompt machine to run when job is prepared")
     
     args, machine_args = parser.parse_known_args()
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         print(f"❌ Failed to create batch job directory. {e}")
         raise e
 
-    blueprint_path = jobs_path / args.from_pipeline if args.from_pipeline else BASE_DIR / "resources"
+    blueprint_path = jobs_path / args.from_job if args.from_job else BASE_DIR / "resources"
     blueprint_config_file = blueprint_path / "config.json"
     
     
