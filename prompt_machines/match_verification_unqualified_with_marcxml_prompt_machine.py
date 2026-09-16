@@ -15,35 +15,35 @@ es = Elasticsearch("http://localhost:9200")
 INDEX_NAME = "records"
 
 SYSTEM_INSTRUCTION = """### ROLE
-You are an expert librarian and archivist. Your task is to assess whether the information in the extracted data from the catalog card matches the information in the MARCXML record.
+You are an expert librarian and archivist. Your task is to assess whether the record extracted from a catalog card matches the information in the MARCXML record.
 
 ### Overall instructions
-- Do not make assumptions about the data. Base your assessment solely on the information provided in the extracted data from the catalog card and the MARCXML record.
-- Do not make any assumptions about errors in the extraction process of the data from the catalog card, or in the MARCXML record. Assume that all the information provided is correct and accurate, even if there are discrepancies between the two sources of information.
+- **Strict Evidence-Based Evaluation:** Base your assessment solely on the provided text. Do not invent context or make assumptions about cataloger intent.
+- **BIBFRAME 2.0 as a reference:** You are evaluating matches at the Work and Instance levels according to the BIBFRAME 2.0 model. A Work represents the conceptual essence of the cataloged resource (the core title, authorship, and language). An Instance represents a specific physical or digital embodiment of a Work (e.g., a specific edition published by a specific publisher in a specific year and place).
+- **Evaluating Language:** The extracted iso_language_code and iso_language_name are AI-generated and frequently incorrect (e.g., guessing Latin when the text is Greek, or Swedish when the text is Sami). The MARCXML record can also contain incorrect language codes caused by cataloging mistakes. Do not fail a match based solely on the language codes. To determine if the language actually differs, you must look for concrete textual evidence (title wording, statement of responsibility).
+- **Danish/Norwegian Overlap:** Historically, written Danish and Norwegian (Riksmål) were nearly identical. Treat discrepancies between Danish and Norwegian language codes as matching Works if the title, author, and year match.
+- **Authorship Flexibility:** The extraction tool may occasionally put the subject of a biography, an editor, or a compiler into the main_author field. Always cross-reference the extracted author with the MARCXML 700 fields (added entries) and the title string. If the person exists in both records in any capacity, do not fail the match on authorship alone.
 
 ### ASSESSMENT CATEGORIES
 #### Correct
-Overall, it should be obvious that the information extraced from the catalog card describes the same work as the information in the MARCXML record. This means that:
-- The title matches, with minor discrepancies allowed.
-- The author(s) match, with minor discrepancies allowed.
-- The publication year matches, with NO discrepancies allowed.
-- The publication place matches, with minor discrepancies allowed.
-- There are NO discrepancies between the information in the extracted data from the catalog card and the information in the MARCXML record in terms of edition, part or volumes.
+It should be obvious that the catalog card and the MARCXML record describe the same Instance according to BIBFRAME 2.0. The physical details align.
 
 #### Acceptable
-Overall, the information extraced from the catalog card describes the same work as the information in the MARCXML record, and with minor discrepancies allowed. This means that:
-- The title matches, with minor discrepancies allowed.
-- The author(s) match, with minor discrepancies allowed.
-- The publication year matches, with NO discrepancies allowed.
-- Discrepancies in publication place are allowed, but should be noted in the reasoning.
-- Discrepancies in terms of edition, part or volumes are allowed, but should be noted in the reasoning.
-- Discrepancies in bibliographic scope where the information in the extracted data from the catalog card describes a more specific or more general part of the work than the information in the MARCXML record, are allowed but should be noted in the reasoning.
-- Discrepancies in terms of format are allowed.
+It should be obvious that the catalog card and the MARCXML record describe the same Work according to BIBFRAME 2.0, even if they represent different Instances.
+Note: A valid part/whole relationship is allowed ONLY if one record describes a multi-volume Work and the other describes a specific volume or page range of that exact same Work. It does NOT apply to translations or series.
+
+You MUST tolerate the following Instance discrepancies:
+- **Varying length and specificity of the title:** The core title must align, but you must tolerate missing subtitles, differing remainder-of-title text, dropped descriptive elements, or the use of legacy bracketed summaries (e.g., [M.fl. uppsatser...]).
 
 #### Incorrect
-The information extraced from the catalog card does NOT describe the same work as the information in the MARCXML record."""
+The catalog card and the MARCXML record do NOT describe the same Work or Instance according to BIBFRAME 2.0. You MUST score the match as Incorrect in the following scenarios:
+- **Translation vs. original work:** In BIBFRAME, a translation is a DIFFERENT Work. If there is textual or MARC evidence (e.g., "övers.", "overs.", or a 041 field with subfield $h) that one record is a translation and the other is the original work (or a different translation), they are Incorrect.
+- **Series vs. Monograph:** If the catalog card describes an overarching Series or Collection, but the MARCXML record describes a specific Monograph with its own distinct title (even if it belongs to that series), they represent different Works and are Incorrect."""
 
-TEXT_PROMPT = "Assess whether the information in the extracted data from the catalog card matches the information in the MARCXML record."
+TEXT_PROMPT = """Apply the BIBFRAME 2.0 assessment criteria to evaluate the following candidate match. 
+
+First, provide a brief reasoning step verifying the core Work (title, authorship, language) and explicitly noting any tolerated Instance variances (e.g., publisher, place, subtitle length).
+Second, output your final verdict as exactly one of the following: [Correct, Acceptable, Incorrect]."""
 
 class Result(str, Enum):
     CORRECT = "Correct"
@@ -51,9 +51,8 @@ class Result(str, Enum):
     INCORRECT = "Incorrect"
 
 class StructuredOutputSchema(BaseModel):
+    reasoning: Optional[str] = Field(description="Your brief explanation to the result.")
     result: Result = Field(description="The result of the assessment.")
-    reasoning: Optional[str] = Field(description="The model's reasoning for its answer. This should be provided even if the model is not sure about the answer, and should explain why the model is not sure if that is the case.")
-
 
 def build_prompt(extracted_data, marcxml_record):
     prompt = f"""{TEXT_PROMPT}
@@ -90,8 +89,7 @@ def load_marcxml_data(libris_ID, verbose):
             marcxml = hits[0]["_source"].get("marcxml")
 
             if not marcxml:
-                if verbose:
-                    print(f"⚠️  No MARCXML data found for ID: {libris_ID}")
+                print(f"⚠️  No MARCXML data found for ID: {libris_ID}")
                 return None
 
             if verbose:
@@ -101,8 +99,7 @@ def load_marcxml_data(libris_ID, verbose):
             records = pymarc.parse_xml_to_array(marcxml_bytes)
 
             if not records:
-                if verbose:
-                    print(f"⚠️  No MARCXML records found for ID: {libris_ID}")
+                print(f"⚠️  No MARCXML records found for ID: {libris_ID}")
                 return None
 
             record = records[0]
@@ -123,13 +120,11 @@ def load_marcxml_data(libris_ID, verbose):
             return modified_xml_string
             
         else:
-            if verbose:
-                print(f"⚠️  No MARCXML data found for ID: {libris_ID}")
+            print(f"⚠️  No MARCXML data found for ID: {libris_ID}")
             return None
         
     except Exception as e:
-        if verbose:
-            print(f"❌ Failed to retrieve MARCXML data for ID: {libris_ID}. Error: {e}")
+        print(f"❌ Failed to retrieve MARCXML data for ID: {libris_ID}. Error: {e}")
         return None
 
 
@@ -144,8 +139,7 @@ def load_and_clean_extracted_data(extracted_data_directory, card_ID, edition_ind
         if verbose:
             print(f"✅ Successfully loaded extracted data for match: {card_ID}_{edition_index}")
     except Exception as e:
-        if verbose:
-            print(f"❌ Failed to load extracted data for match {card_ID}_{edition_index}: {e}")
+        print(f"❌ Failed to load extracted data for match {card_ID}_{edition_index}: {e}")
         return None
 
     if "editions" not in extracted_data or not isinstance(extracted_data['editions'], list):
@@ -159,8 +153,7 @@ def load_and_clean_extracted_data(extracted_data_directory, card_ID, edition_ind
         if verbose:
             print(f"✅ Successfully filtered for edition {edition_index} in {card_ID}.json.")
     else:
-        if verbose:
-            print(f"⚠️ Skipping: Edition index {edition_index} is out of bounds for {card_ID}.json.")
+        print(f"⚠️ Skipping: Edition index {edition_index} is out of bounds for {card_ID}.json.")
         return None
 
     extracted_data.pop("subject_headings", None)
@@ -190,14 +183,12 @@ def process_matches(matches, extracted_data_directory, output_directory, verbose
 
         extracted_data = load_and_clean_extracted_data(extracted_data_directory, card_ID, edition_index, verbose)
         if extracted_data is None:
-            if verbose:
-                print(f"⚠️  Skipping match {match_object_ID} due to missing or invalid extracted data.")
+            print(f"⚠️  Skipping match {match_object_ID} due to missing or invalid extracted data.")
             continue
 
         marcxml = load_marcxml_data(match["id"], verbose)
         if marcxml is None:
-            if verbose:
-                print(f"⚠️  Skipping match {match_object_ID} due to missing MARCXML data.")
+            print(f"⚠️  Skipping match {match_object_ID} due to missing MARCXML data.")
             continue
 
         prompt = build_prompt(extracted_data, marcxml)
